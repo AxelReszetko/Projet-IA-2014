@@ -11,7 +11,14 @@ public enum PacmanStrategy {
 		}
 
 	},
-	
+        
+	WTF {
+		@Override
+		public PacmanController getController(World world) {
+			return new PacmanWTF(world);
+		}
+
+	},
 	RANDOM {
 		@Override
 		public PacmanController getController(World world) {

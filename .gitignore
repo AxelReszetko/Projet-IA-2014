@@ -2,7 +2,11 @@
 /pacman/nbproject/
 /pacman-desktop/nbproject/private/
 /pacman-desktop/nbproject/
-./*.jar
+*.jar
+/pacman/build.xml
+/pacman/manifest.mf
+/pacman-desktop/build.xml
+/pacman-desktop/manifest.mf
 /pacman/build/
 /pacman/dist/
 /pacman-desktop/dist/

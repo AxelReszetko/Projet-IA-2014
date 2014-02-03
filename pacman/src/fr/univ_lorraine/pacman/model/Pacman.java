@@ -11,8 +11,8 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 
 /**
- * @author Martine Gautier, Université de Lorraine
- * @author Laurent Bougrain, Université de Lorraine
+ * @author Martine Gautier, Universit√© de Lorraine
+ * @author Laurent Bougrain, Universit√© de Lorraine
  */
 public class Pacman extends GameMoveableBasicElement {
 	
@@ -53,9 +53,9 @@ public class Pacman extends GameMoveableBasicElement {
 	
 	//////////////////////////////////////////////////////////////////////////
 	public void detectAndManageCollision() {
-		//avec les élements fixes du labyrinthe;
+		//avec les ÔøΩlements fixes du labyrinthe;
 		super.detectAndManageCollision();
-		// avec les fantômes
+		// avec les fantÔøΩmes
 		Iterator<Ghost> iterGhost = world.ghostsIterator();
 		while (iterGhost.hasNext()) {
 			Ghost gh = iterGhost.next();
@@ -67,20 +67,20 @@ public class Pacman extends GameMoveableBasicElement {
 	
 	
 	/** 
-	 * Gérer la collision avec une pellet
+	 * GÔøΩrer la collision avec une pellet
 	 */
 	public void collision(Pellet p) {
 		world.remove(p);
 	}
 	
 	/** 
-	 * Gérer la collision avec une super pellet
+	 * GÔøΩrer la collision avec une super pellet
 	 */
 	public void collision(SuperPellet sp) {
 		world.remove(sp);
 		this.state = State.HUNTING;
 		lastChasingTime = TimeUtils.millis();
-		// Prévenir les fantômes qu'ils sont poursuivis
+		// PrÔøΩvenir les fantÔøΩmes qu'ils sont poursuivis
 		Iterator<Ghost> iterGhost = world.ghostsIterator() ;
         while (iterGhost.hasNext()) {
             Ghost gh = iterGhost.next();
@@ -89,15 +89,15 @@ public class Pacman extends GameMoveableBasicElement {
 	}
 
 	/** 
-	 * Gérer la collision avec Pacman
+	 * GÔøΩrer la collision avec Pacman
 	 */
 	public void collision(Pacman p) {
-		throw new RuntimeException ("Bug sévère : Pacman téléscope Pacman");
+		throw new RuntimeException ("Bug sÔøΩvÔøΩre : Pacman tÔøΩlÔøΩscope Pacman");
 	}
 
 	
 	/** 
-	 * Gérer la collision avec un fantôme
+	 * GÔøΩrer la collision avec un fantÔøΩme
 	 */
 	public void collision(Ghost g) {
 		switch (g.getState()) {
@@ -110,16 +110,16 @@ public class Pacman extends GameMoveableBasicElement {
 			case HUNTING : { 
 				this.kill(); 
 				this.state = State.DEAD;
-				System.out.println("les fantômes gagnent !"); 
+				System.out.println("les fantÔøΩmes gagnent !"); 
 				world.setEndOfGame(true);
 				break;
 				}
-			default: //DEAD : System.out.println("le fantôme est mort !");  break;
+			default: //DEAD : System.out.println("le fantÔøΩme est mort !");  break;
 		}
 	}
 
 	/** 
-	 * Gérer la collision avec un autre personnage
+	 * GÔøΩrer la collision avec un autre personnage
 	 */
 	public void manageCollision(GameMoveableBasicElement g) {
 		g.collision(this);

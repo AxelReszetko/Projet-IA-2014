@@ -7,8 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 /**
- * @author Martine Gautier, Universit� de Lorraine
- * @author Laurent Bougrain, Universit� de Lorraine
+ * @author Martine Gautier, Université de Lorraine
+ * @author Laurent Bougrain, Université de Lorraine
  */
 public class World implements GameElement {
 

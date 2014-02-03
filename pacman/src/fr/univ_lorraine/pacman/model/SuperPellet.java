@@ -6,8 +6,8 @@ import com.badlogic.gdx.math.Vector2;
 import fr.univ_lorraine.pacman.view.TextureFactory;
 
 /**
- * @author Martine Gautier, Universit de Lorraine
- * @author Laurent Bougrain, Universit de Lorraine
+ * @author Martine Gautier, UniversitÃ© de Lorraine
+ * @author Laurent Bougrain, UniversitÃ© de Lorraine
  */
 public class SuperPellet extends GameBasicElement {
 	
@@ -21,8 +21,8 @@ public class SuperPellet extends GameBasicElement {
 	}
 
 	/** 
-	 * Grer la collision dtecte entre this et p
-	 * @param p : un lment qui bouge 
+	 * Gï¿½rer la collision dï¿½tectï¿½e entre this et p
+	 * @param p : un ï¿½lï¿½ment qui bouge 
 	 */
 	@Override
 	public void manageCollision(GameMoveableBasicElement g) {

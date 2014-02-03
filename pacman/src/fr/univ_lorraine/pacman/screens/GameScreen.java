@@ -12,8 +12,8 @@ import fr.univ_lorraine.pacman.model.World;
 import fr.univ_lorraine.pacman.view.WorldRenderer;
 
 /**
- * @author Martine Gautier, Universit� de Lorraine
- * @author Laurent Bougrain, Universit� de Lorraine
+ * @author Martine Gautier, Université de Lorraine
+ * @author Laurent Bougrain, Université de Lorraine
  */
 public class GameScreen implements Screen {
 

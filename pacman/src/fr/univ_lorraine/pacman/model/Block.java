@@ -7,8 +7,8 @@ import com.badlogic.gdx.math.Vector2;
 import fr.univ_lorraine.pacman.view.TextureFactory;
 
 /**
- * @author Martine Gautier, Universit� de Lorraine
- * @author Laurent Bougrain, Universit� de Lorraine
+ * @author Martine Gautier, Université de Lorraine
+ * @author Laurent Bougrain, Université de Lorraine
  */
 public class Block extends GameBasicElement {
 	

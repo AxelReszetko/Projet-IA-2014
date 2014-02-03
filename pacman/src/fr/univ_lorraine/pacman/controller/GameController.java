@@ -5,8 +5,8 @@ import fr.univ_lorraine.pacman.controller.pacman.PacmanStrategy;
 import fr.univ_lorraine.pacman.model.World;
 
 /**
- * @author Martine Gautier, Universit� de Lorraine
- * @author Laurent Bougrain, Universit� de Lorraine
+ * @author Martine Gautier, Université de Lorraine
+ * @author Laurent Bougrain, Université de Lorraine
  */
 public class GameController {
 

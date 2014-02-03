@@ -1,0 +1,9 @@
+/pacman/nbproject/private/
+/pacman/nbproject/
+/pacman-desktop/nbproject/private/
+/pacman-desktop/nbproject/
+./*.jar
+/pacman/build/
+/pacman/dist/
+/pacman-desktop/dist/
+/pacman-desktop/build/

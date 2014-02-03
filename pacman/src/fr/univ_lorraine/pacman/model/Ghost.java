@@ -9,14 +9,14 @@ import fr.univ_lorraine.pacman.view.TextureFactory;
 import com.badlogic.gdx.utils.TimeUtils;
 
 /**
- * @author Martine Gautier, UniversitŽ de Lorraine
- * @author Laurent Bougrain, UniversitŽ de Lorraine
+ * @author Martine Gautier, UniversitÃ© de Lorraine
+ * @author Laurent Bougrain, UniversitÃ© de Lorraine
  */
 public class Ghost extends GameMoveableBasicElement {
 
-	private int numero;			  // identifiant du fant™me (entre 1 et 4)
-	private long lastChasedTime;  // temps auquel Pacman a mangŽ une super pac-gomme
-	private final float SPEED = super.SPEED*0.9f; //la vitesse des fant™mes est lŽgrement infŽrieure ˆ Pacman
+	private int numero;			  // identifiant du fantï¿½me (entre 1 et 4)
+	private long lastChasedTime;  // temps auquel Pacman a mangï¿½ une super pac-gomme
+	private final float SPEED = super.SPEED*0.9f; //la vitesse des fantï¿½mes est lï¿½gï¿½rement infï¿½rieure ï¿½ Pacman
 
 	public Ghost(Vector2 pos, int num, World world) {
 		super(pos, world);
@@ -26,8 +26,8 @@ public class Ghost extends GameMoveableBasicElement {
 	}
 	
 	/** 
-	 * On tente un pas et on gre les Žventuelles collisions
-	 * Aprs 7 secondes, les fant™mes redeviennent chasseurs
+	 * On tente un pas et on gï¿½re les ï¿½ventuelles collisions
+	 * Aprï¿½s 7 secondes, les fantï¿½mes redeviennent chasseurs
 	 */
 	public void update(float delta) {
 		if (((TimeUtils.millis() - lastChasedTime) > 7000)
@@ -57,10 +57,10 @@ public class Ghost extends GameMoveableBasicElement {
 	}
 	
 	/** 
-	 * DŽtecter les collisions avec les ŽlŽments fixes du labyrinthe et Pacman
+	 * Dï¿½tecter les collisions avec les ï¿½lï¿½ments fixes du labyrinthe et Pacman
 	 */
 	public void detectAndManageCollision() {
-		//avec les Žlements fixes du labyrinthe;
+		//avec les ï¿½lements fixes du labyrinthe;
 		super.detectAndManageCollision();
 		// avec pacman
 		if (this.hasCollision(world.getPacman()))
@@ -68,7 +68,7 @@ public class Ghost extends GameMoveableBasicElement {
 	}
 	
 	/** 
-	 * GŽrer la collision avec un autre personnage
+	 * Gï¿½rer la collision avec un autre personnage
 	 */
 	@Override
 	public void manageCollision(GameMoveableBasicElement g) {
@@ -77,40 +77,40 @@ public class Ghost extends GameMoveableBasicElement {
 	}
 
 	/** 
-	 * GŽrer la collision avec une pellet
+	 * Gï¿½rer la collision avec une pellet
 	 */
 	@Override
 	public void collision(Pellet p) {
-		// Un fant™me passe ˆ travers une pellet
+		// Un fantï¿½me passe ï¿½ travers une pellet
 	}
 
 	/** 
-	 * GŽrer la collision avec une superPellet
+	 * Gï¿½rer la collision avec une superPellet
 	 */
 	@Override
 	public void collision(SuperPellet sp) {
-		// Un fant™me passe ˆ travers une super pellet
+		// Un fantï¿½me passe ï¿½ travers une super pellet
 	}
 
 	/** 
-	 * GŽrer la collision avec Pacman
+	 * Gï¿½rer la collision avec Pacman
 	 */
 	@Override
 	public void collision(Pacman p) {
-		// C'est Pacman qui va gŽrer
+		// C'est Pacman qui va gï¿½rer
 		p.collision(this);
 	}
 
 	/** 
-	 * GŽrer la collision avec un autre fant™me
+	 * Gï¿½rer la collision avec un autre fantï¿½me
 	 */
 	@Override
 	public void collision(Ghost g) {
-		// Deux fant™mes se rentrent dedans ... Rien ˆ faire
+		// Deux fantï¿½mes se rentrent dedans ... Rien ï¿½ faire
 	}
 
 	/**
-	 * Le fant™me est poursuivi
+	 * Le fantï¿½me est poursuivi
 	 */
 	public void setChased() {
 		this.state = State.HUNTED;

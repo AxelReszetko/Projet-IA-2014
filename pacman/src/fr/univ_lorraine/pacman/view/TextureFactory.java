@@ -4,8 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 
 /**
- * @author Martine Gautier, Université de Lorraine
- * @author Laurent Bougrain, Université de Lorraine
+ * @author Martine Gautier, Universit√© de Lorraine
+ * @author Laurent Bougrain, Universit√© de Lorraine
  */
 public class TextureFactory {
 

@@ -3,12 +3,12 @@ package fr.univ_lorraine.pacman.model;
 import com.badlogic.gdx.math.Vector2;
 
 /**
- * @author Martine Gautier, Université de Lorraine
- * @author Laurent Bougrain, Université de Lorraine
+ * @author Martine Gautier, Universit√© de Lorraine
+ * @author Laurent Bougrain, Universit√© de Lorraine
  */
 public abstract class GameMoveableBasicElement extends GameBasicElement {
 	
-    protected boolean isMoving;				// indique si l'élément est en mouvement
+    protected boolean isMoving;				// indique si l'ÔøΩlÔøΩment est en mouvement
 	protected final float SPEED = 8.0f;    // vitesse du mouvement
 	protected Direction direction ;			// direction du mouvement
 	public enum Direction {
@@ -27,27 +27,27 @@ public abstract class GameMoveableBasicElement extends GameBasicElement {
 	}
 
 	/**
-	 * Tuer l'élément
+	 * Tuer l'ÔøΩlÔøΩment
 	 */
 	public void kill() {
 		this.state = State.DEAD;		
 	}
 
 	/**
-	 * On tente un pas et on gère les éventuelles collisions
+	 * On tente un pas et on gÔøΩre les ÔøΩventuelles collisions
 	 * @param delta
 	 */
 	public void update(float delta) {
 		if (isMoving) {
 			this.goForward(delta);
-			// Détecter et gérer les collisions
-			// avec les élements fixes du labyrinthe
+			// DÔøΩtecter et gÔøΩrer les collisions
+			// avec les ÔøΩlements fixes du labyrinthe
 			this.detectAndManageCollision();
 		}
 	}
 	//////////////////////////////////////////////////////////////////////////
 	/**
-	 * récupération de l'état
+	 * rÔøΩcupÔøΩration de l'ÔøΩtat
 	 */
 	public State getState() {
 		return state;
@@ -90,7 +90,7 @@ public abstract class GameMoveableBasicElement extends GameBasicElement {
 	
 	//////////////////////////////////////////////////////////////////////////
 	/**
-	 * Détection d'une collision éventuelle 
+	 * DÔøΩtection d'une collision ÔøΩventuelle 
 	 */
 	public void detectAndManageCollision() {
 		// A affiner pour prendre en compte la direction
@@ -125,7 +125,7 @@ public abstract class GameMoveableBasicElement extends GameBasicElement {
 	}
 
 	/** 
-	 * Gérer la collision avec un bloc
+	 * GÔøΩrer la collision avec un bloc
 	 */
 	public void collision(Block b) {
 		this.isMoving = false;
@@ -139,22 +139,22 @@ public abstract class GameMoveableBasicElement extends GameBasicElement {
 	}
 	
 	/** 
-	 * Gérer la collision avec une pellet
+	 * GÔøΩrer la collision avec une pellet
 	 */
 	public abstract void collision(Pellet p) ;
 	
 	/** 
-	 * Gérer la collision avec une super pellet
+	 * GÔøΩrer la collision avec une super pellet
 	 */
 	public abstract void collision(SuperPellet sp);
 	
 	/** 
-	 * Gérer la collision avec Pacman
+	 * GÔøΩrer la collision avec Pacman
 	 */
 	public abstract void collision(Pacman p);
 	
 	/** 
-	 * Gérer la collision avec un fantôme
+	 * GÔøΩrer la collision avec un fantÔøΩme
 	 */
 	public abstract void collision(Ghost g);
 	

@@ -19,7 +19,7 @@ public class PacmanTest extends PacmanController{
 		System.out.println("PacmanTest Strategy");
 		pac = world.getPacman();
 		buildInters();
-		printInters();
+		//printInters();
 	
 	}
 	@Override
@@ -76,7 +76,7 @@ public class PacmanTest extends PacmanController{
 			
 		}
 	}
-	
+	/*
 	public void buildPaths(){
 		int id=1;
 		for(int lig=world.getHeight();lig>-1;lig--){
@@ -130,7 +130,7 @@ public class PacmanTest extends PacmanController{
 			System.out.println(ligne);
 		} 
 	}
-	
+	*/
 	public int getInterLig(int inter){
 		return inters.get(inter)[0];
 	}

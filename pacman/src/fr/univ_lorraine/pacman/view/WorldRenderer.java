@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import fr.univ_lorraine.pacman.model.World;
 
 /**
- * @author Martine Gautier, Université de Lorraine
- * @author Laurent Bougrain, Université de Lorraine
+ * @author Martine Gautier, Universit√© de Lorraine
+ * @author Laurent Bougrain, Universit√© de Lorraine
  */
 public class WorldRenderer {
 

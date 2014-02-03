@@ -2,10 +2,10 @@ package fr.univ_lorraine.pacman;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-
+import fr.univ_lorraine.pacman.PacmanGame;
 /**
- * @author Martine Gautier, Université de Lorraine
- * @author Laurent Bougrain, Université de Lorraine
+ * @author Martine Gautier, Universit√© de Lorraine
+ * @author Laurent Bougrain, Universit√© de Lorraine
  */
 public class Main {
 	public static void main(String[] args) {
@@ -16,7 +16,6 @@ public class Main {
 		cfg.width = 540;
 		cfg.height = 620;
 		cfg.resizable = false;
-
-		new LwjglApplication(new PacmanGame(), cfg);
+		LwjglApplication a = new LwjglApplication(new PacmanGame(), cfg);
 	}
 }

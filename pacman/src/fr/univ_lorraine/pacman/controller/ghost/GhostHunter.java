@@ -128,6 +128,7 @@ public class GhostHunter extends GhostController {
             return other.x == x && other.y == y;
         }
     } 
+    
     public GhostHunter(World world) {
 	super(world);
         paths = new ArrayList[4];
@@ -172,8 +173,8 @@ public class GhostHunter extends GhostController {
     }
         
     private ArrayList<Direction> goTo(Node from, Node to) {
-        ArrayList<Node> visited = new ArrayList<Node>();
-        ArrayList<Node> toVisit = new ArrayList<Node>();
+        ArrayList<Node> visited = new ArrayList<>();
+        ArrayList<Node> toVisit = new ArrayList<>();
         toVisit.add(from);
         int x1,y1;
         GameBasicElement e = null;

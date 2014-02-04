@@ -16,6 +16,13 @@ public enum GhostStrategy {
 		public GhostController getController(World world) {
 			return new GhostHunter(world);
 		}
+	},
+        
+        SHADOW {
+		@Override
+		public GhostController getController(World world) {
+			return new GhostShadow(world);
+		}
 	};
 
 	public abstract GhostController getController(World world);

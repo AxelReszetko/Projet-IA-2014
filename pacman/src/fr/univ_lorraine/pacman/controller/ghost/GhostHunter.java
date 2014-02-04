@@ -1,20 +1,20 @@
-package fr.univ_lorraine.pacman.controller.pacman;
+package fr.univ_lorraine.pacman.controller.ghost;
 
-import fr.univ_lorraine.pacman.controller.PacmanController;
+import com.badlogic.gdx.math.Vector2;
+import java.util.Iterator;
+
+import fr.univ_lorraine.pacman.controller.GhostController;
 import fr.univ_lorraine.pacman.model.Block;
 import fr.univ_lorraine.pacman.model.GameBasicElement;
-import fr.univ_lorraine.pacman.model.Pacman;
+import fr.univ_lorraine.pacman.model.Ghost;
 import fr.univ_lorraine.pacman.model.World;
 import java.util.ArrayList;
 
-public class PacmanWTF extends PacmanController {
-
-    private Pacman pac;
-    private boolean prem;
-    private int dir;
-    private ArrayList<Direction> path;
+public class GhostHunter extends GhostController {
     private static final double epsilon = 0.2;
-
+    private Node[] lastPos;
+    private ArrayList<Direction>[] paths;
+    
     private class Direction {
 
         private int x, y, dir;
@@ -72,7 +72,19 @@ public class PacmanWTF extends PacmanController {
             this.dist = 0;
             this.comeFrom = null;
         }
-
+        
+        public Node(Vector2 pos){
+            this.x = (int)pos.x;
+            this.y = (int)pos.y;
+            this.dist = 0;
+            this.comeFrom = null;
+        }
+        public int minDistanceTo(Node n2){
+            return Math.abs(this.x - n2.x) + Math.abs(this.y - n2.y);
+        }
+        public int minDistanceTo(Vector2 n2){
+            return Math.abs(this.x - (int)n2.x) + Math.abs(this.y - (int)n2.y);
+        }
         public int getDist() {
             return dist;
         }
@@ -115,66 +127,72 @@ public class PacmanWTF extends PacmanController {
             Node other = (Node)o;
             return other.x == x && other.y == y;
         }
-    }
-    public PacmanWTF(World world) {
-        super(world);
-        System.out.println("PacmanWTFCreator");
-        pac = world.getPacman();
-        path = null;
-        // TODO Auto-generated constructor stub
+    } 
+    public GhostHunter(World world) {
+	super(world);
+        paths = new ArrayList[4];
+        lastPos = new Node[4];
     }
 
     @Override
     public void update(float delta) {
-        if (canTurn()) {
-            if (path == null || path.isEmpty()) {
-                path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y);
-            }/**/
-
-            if (path.get(0).x == (int) pac.getPosition().x && path.get(0).y == (int) pac.getPosition().y) {
-                dir = path.get(0).dir;
-                path.remove(0);
-                switch (dir) {
-                    case Direction.DOWN:
-                        pac.turnDown();
-                        break;
-                    case Direction.LEFT:
-                        pac.turnLeft();
-                        break;
-                    case Direction.RIGHT:
-                        pac.turnRight();
-                        break;
-                    case Direction.TOP:
-                        pac.turnUp();
-                        break;
+        Iterator<Ghost> iterGhost = world.ghostsIterator();
+        int i = 0;
+        Ghost gh;
+	while (iterGhost.hasNext()) {
+            gh = iterGhost.next();
+            if(canTurn(gh)){
+                if(lastPos[i] == null || lastPos[i].minDistanceTo(world.getPacman().getPosition()) > 3 || paths[i] == null || paths[i].isEmpty()){
+                    lastPos[i] = new Node(world.getPacman().getPosition());
+                    paths[i] = goTo(new Node(gh.getPosition()),lastPos[i]);
+                }
+                int dir;
+                if (paths[i].get(0).x == (int) gh.getPosition().x && paths[i].get(0).y == (int) gh.getPosition().y) {
+                    dir = paths[i].get(0).dir;
+                    paths[i].remove(0);
+                    switch (dir) {
+                        case Direction.DOWN:
+                            gh.turnDown();
+                            break;
+                        case Direction.LEFT:
+                            gh.turnLeft();
+                            break;
+                        case Direction.RIGHT:
+                            gh.turnRight();
+                            break;
+                        case Direction.TOP:
+                            gh.turnUp();
+                            break;
+                    }
                 }
             }
-
-        }
-        pac.update(delta);
+            gh.update(delta);
+            i++;
+	}
     }
-
-    private ArrayList<Direction> findClosestPellet(int x, int y) {
+        
+    private ArrayList<Direction> goTo(Node from, Node to) {
         ArrayList<Node> visited = new ArrayList<Node>();
         ArrayList<Node> toVisit = new ArrayList<Node>();
-        toVisit.add(new Node(x,y));
+        toVisit.add(from);
+        int x1,y1;
         GameBasicElement e = null;
         while(!toVisit.isEmpty()){
-            x = toVisit.get(0).x;
-            y = toVisit.get(0).y;
-            e = world.getElement((x + 26)%27, y);
+            x1 = toVisit.get(0).x;
+            y1 = toVisit.get(0).y;
+            e = world.getElement((x1 +26)%27, y1);
             if(e == null || !(e instanceof Block)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
-                    if(visited.get(i).equals(new Node((x + 26)%27, y))){
+                    if(visited.get(i).equals(new Node((x1+26)%27, y1))){
                         break;
                     }
                 }
                 if(i >= visited.size()){
-                    Node node = new Node((x + 26)%27, y);
+                    Node node = new Node((x1+26)%27, y1);
                     node.setComeFrom(toVisit.get(0));
                     toVisit.add(node);
-                    if(e != null)
+                    if(node.equals(to))
                         break;
                 }
                 else if(visited.get(i).dist > toVisit.get(0).dist + 1){
@@ -183,19 +201,19 @@ public class PacmanWTF extends PacmanController {
                     visited.remove(i);
                 }
             }
-            e = world.getElement((x+1)%27, y);
+            e = world.getElement((x1+1)%27, y1);
             if(e == null || !(e instanceof Block)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
-                    if(visited.get(i).equals(new Node((x+1)%27, y))){
+                    if(visited.get(i).equals(new Node((x1+1)%27, y1))){
                         break;
                     }
                 }
                 if(i >= visited.size()){
-                    Node node = new Node((x+1)%27, y);
+                    Node node = new Node((x1+1)%27, y1);
                     node.setComeFrom(toVisit.get(0));
                     toVisit.add(node);
-                    if(e != null)
+                    if(node.equals(to))
                         break;
                 }
                 else if(visited.get(i).dist > toVisit.get(0).dist + 1){
@@ -204,19 +222,19 @@ public class PacmanWTF extends PacmanController {
                     visited.remove(i);
                 }
             }
-            e = world.getElement(x, y-1);
+            e = world.getElement(x1, y1-1);
             if(e == null || !(e instanceof Block)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
-                    if(visited.get(i).equals(new Node(x, y-1))){
+                    if(visited.get(i).equals(new Node(x1, y1-1))){
                         break;
                     }
                 }
                 if(i >= visited.size()){
-                    Node node = new Node(x, y-1);
+                    Node node = new Node(x1, y1-1);
                     node.setComeFrom(toVisit.get(0));
                     toVisit.add(node);
-                    if(e != null)
+                    if(node.equals(to))
                         break;
                 }
                 else if(visited.get(i).dist > toVisit.get(0).dist + 1){
@@ -225,19 +243,19 @@ public class PacmanWTF extends PacmanController {
                     visited.remove(i);
                 }
             }
-            e = world.getElement(x, y+1);
+            e = world.getElement(x1, y1+1);
             if(e == null || !(e instanceof Block)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
-                    if(visited.get(i).equals(new Node(x, y+1))){
+                    if(visited.get(i).equals(new Node(x1, y1+1))){
                         break;
                     }
                 }
                 if(i >= visited.size()){
-                    Node node = new Node(x, y+1);
+                    Node node = new Node(x1, y1+1);
                     node.setComeFrom(toVisit.get(0));
                     toVisit.add(node);
-                    if(e != null)
+                    if(node.equals(to))
                         break;
                 }
                 else if(visited.get(i).dist > toVisit.get(0).dist + 1){
@@ -252,7 +270,6 @@ public class PacmanWTF extends PacmanController {
         }
         ArrayList<Direction> path = new ArrayList<>();
         Node node;
-        if(e != null && !(e instanceof Block)){
             node = toVisit.get(toVisit.size()-1);
             while(node.getComeFrom() != null){
                 if(node.getX() - node.getComeFrom().getX() < 0){
@@ -269,11 +286,11 @@ public class PacmanWTF extends PacmanController {
                 }
                 node = node.getComeFrom();
             }
-        }
         return path;
     }
 
-    private boolean canTurn() {
-        return pac.getPosition().x - (int) pac.getPosition().x < epsilon && pac.getPosition().y - (int) pac.getPosition().y < epsilon;
+    private boolean canTurn(Ghost g) {
+        return g.getPosition().x - (int) g.getPosition().x < epsilon && g.getPosition().y - (int) g.getPosition().y < epsilon;
     }
+
 }

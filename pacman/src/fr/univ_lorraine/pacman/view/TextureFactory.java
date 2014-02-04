@@ -19,7 +19,6 @@ public class TextureFactory {
 	}
 	/**
 	private Texture bloc = new Texture(Gdx.files.internal("C:/Users/Fabien/Documents/GitHub/Projet-IA-2014/pacman-desktop/assets/images/bloc.png"));
-
 	private Texture maze = new Texture(Gdx.files.internal("C:/Users/Fabien/Documents/GitHub/Projet-IA-2014/pacman-desktop/assets/images/maze.png"));
 	private Texture pellet = new Texture(Gdx.files.internal("C:/Users/Fabien/Documents/GitHub/Projet-IA-2014/pacman-desktop/assets/images/pellet.png"));
 	private Texture pacmanLeft = new  Texture(Gdx.files.internal("C:/Users/Fabien/Documents/GitHub/Projet-IA-2014/pacman-desktop/assets/images/pacmanLeft.png"));
@@ -49,6 +48,7 @@ public class TextureFactory {
 	private Texture ghostChased = new  Texture(Gdx.files.internal("images/ghostChased.png"));
 	private Texture ghostChasedend = new  Texture(Gdx.files.internal("images/ghost1.png"));
 	private Texture ghostDead = new  Texture(Gdx.files.internal("images/ghostDead.png"));
+
 	private Texture superPellet = new  Texture(Gdx.files.internal("images/superPellet.png"));
 	//private Texture superPellet = new  Texture(Gdx.files.internal("images/ghostDead.png"));
 	/**/

@@ -25,6 +25,13 @@ public enum GhostStrategy {
 		}
 	},
         
+        CLOAKER {
+		@Override
+		public GhostController getController(World world) {
+			return new GhostCloaker(world);
+		}
+	},
+        
         SHADOW {
 		@Override
 		public GhostController getController(World world) {

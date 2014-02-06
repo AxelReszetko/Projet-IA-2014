@@ -206,6 +206,7 @@ public class GhostCloaker extends GhostController {
             if (canTurn(gh)) {
                 //here find a good algorithm to affect each ghost to a different node
                 //interesting nodes for the i\ieme{} ghost is stored in targets[i]
+                
             }
         }
     }

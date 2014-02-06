@@ -176,7 +176,7 @@ public class GhostShadow extends GhostController {
                     //System.err.println("ghost " + i + " : " + getDestination(paths[i]));
                 }
                 int dir;
-                if (paths[i].get(0).x == (int) gh.getPosition().x && paths[i].get(0).y == (int) gh.getPosition().y) {
+                if (paths[i] != null && paths[i].get(0).x == (int) gh.getPosition().x && paths[i].get(0).y == (int) gh.getPosition().y) {
                     dir = paths[i].get(0).dir;
                     paths[i].remove(0);
                     switch (dir) {
@@ -201,6 +201,8 @@ public class GhostShadow extends GhostController {
     }
 
     private ArrayList<Direction> goTo(Node from, Node to) {
+        if(from.equals(to))
+            return null;
         ArrayList<Node> visited = new ArrayList<>();
         ArrayList<Node> toVisit = new ArrayList<>();
         toVisit.add(from);

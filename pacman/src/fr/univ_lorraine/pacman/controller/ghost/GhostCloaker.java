@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import fr.univ_lorraine.pacman.controller.GhostController;
 import fr.univ_lorraine.pacman.model.Block;
+import fr.univ_lorraine.pacman.model.GameMoveableBasicElement;
 import fr.univ_lorraine.pacman.model.Ghost;
 import fr.univ_lorraine.pacman.model.World;
 import java.util.ArrayList;
@@ -13,8 +14,54 @@ public class GhostCloaker extends GhostController {
 
     private static final double epsilon = 0.2;
     private ArrayList<Node> graph;
-    private ArrayList<Node> posPacman;
+    private Node[] lastPos;
 
+    private class Direction {
+
+        private int x, y, dir;
+
+        public static final int TOP = 0;
+        public static final int DOWN = 1;
+        public static final int RIGHT = 2;
+        public static final int LEFT = 3;
+
+        public Direction(int x, int y, int dir) {
+            this.dir = dir;
+            this.x = x;
+            this.y = y;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public int getDir() {
+            return dir;
+        }
+
+        public String toString() {
+            String ret = "(" + x + ", " + y + ") : ";
+            switch (dir) {
+                case LEFT:
+                    ret += "LEFT";
+                    break;
+                case RIGHT:
+                    ret += "RIGHT";
+                    break;
+                case TOP:
+                    ret += "TOP";
+                    break;
+                default:
+                    ret += "DOWN";
+            }
+            return ret;
+        }
+    }
+    
     private class Node {
 
         private int x, y;
@@ -28,6 +75,11 @@ public class GhostCloaker extends GhostController {
             this.y = y;
             this.neighbors = new ArrayList<>();
             this.distFrom = new double[5];
+        }
+        
+        public Node(Vector2 pos){
+            this.x = (int)pos.x;
+            this.y = (int)pos.y;
         }
 
         public double getDistFrom(int i) {
@@ -103,7 +155,14 @@ public class GhostCloaker extends GhostController {
     public GhostCloaker(World world) {
         super(world);
         graph = new ArrayList<>();
-        for (int i = 0; i < world.getWidth(); i++) {
+        lastPos = new Node[5];
+        lastPos[0] = new Node(world.getPacman().getPosition());
+        Iterator<Ghost> it = world.ghostsIterator();
+        int i = 1;
+        while(it.hasNext())
+            lastPos[i++] = new Node(it.next().getPosition());
+
+        for (i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
                 if (world.getElement(i, j) == null || !(world.getElement(i, j) instanceof Block)) {
                     if ((world.getElement((i + 1) % 27, j) == null || world.getElement((i + 26) % 27, j) == null || !(world.getElement((i + 1) % 27, j) instanceof Block)
@@ -117,7 +176,7 @@ public class GhostCloaker extends GhostController {
         for (Node n : graph) {
             char done = 0;
             char used = 0;
-            int i = 0;
+            i = 0;
             if (world.getElement((n.x + 1) % 27, n.y) == null || !(world.getElement((n.x + 1) % 27, n.y) instanceof Block)) {
                 used |= 1;
                 if (n.addNeighbor(getNode((n.x + 1 + i) % 27, n.y))) {
@@ -171,24 +230,18 @@ public class GhostCloaker extends GhostController {
 
     @Override
     public void update(float delta) {
-        boolean needUpdate;
-        ArrayList<Node>[] targets;
-        if (posPacman == null) {
+        boolean needUpdate = false;
+        Iterator<Ghost> it = world.ghostsIterator();
+        Ghost gh;
+        if(!lastPos[0].equals(new Node(world.getPacman().getPosition()))){
             needUpdate = true;
-        } else {
-            needUpdate = false;
-            ArrayList<Node> currentPos = getNearestNodes(world.getPacman().getPosition());
-            if (currentPos.size() != posPacman.size()) {
-                needUpdate = true;
-            } else {
-                for (Node n : posPacman) {
-                    if (!currentPos.contains(n)) {
-                        needUpdate = true;
-                        break;
-                    }
-                }
-            }
         }
+        int i = 1;
+        while(it.hasNext())
+            if(!lastPos[i++].equals(new Node(it.next().getPosition())))
+                needUpdate = true;
+        
+        ArrayList<Node>[] targets;
         if (needUpdate) {
             updateGraph();
             targets = getTargets();/*
@@ -198,16 +251,19 @@ public class GhostCloaker extends GhostController {
              System.err.println("______________________________________");*/
 
         }
-        Iterator<Ghost> it = world.ghostsIterator();
-        Ghost gh;
+        i = 1;
         while (it.hasNext()) {
             gh = it.next();
+            if(gh.getState() != GameMoveableBasicElement.State.HUNTING){
+                goTo(i, new Node(gh.getPosition()),new Node(13,18));
+            }
             //insert code here to flee super pacman
             if (canTurn(gh)) {
                 //here find a good algorithm to affect each ghost to a different node
                 //interesting nodes for the i\ieme{} ghost is stored in targets[i]
                 
             }
+            i++;
         }
     }
 
@@ -290,6 +346,10 @@ public class GhostCloaker extends GhostController {
         return nodes;
     }
 
+    private ArrayList<Node> getNearestNodes(int x, int y) {
+        return getNearestNodes(new Vector2(x,y));
+    }
+    
     private void updateGraph() {
         ArrayList<Node> visited = new ArrayList();
         ArrayList<Node> toVisit = new ArrayList();
@@ -372,5 +432,33 @@ public class GhostCloaker extends GhostController {
             visited = new ArrayList<>();
         }
         return targets;
+    }
+    
+    private ArrayList<Direction> goTo(int i, Node from, Node to){
+        ArrayList<Direction> path = new ArrayList<>();
+        Node currentNode = to;
+        Node tmp = null;
+        ArrayList<Node> neighbors = getNearestNodes(to.x,to.y);
+        double min;
+        while(!currentNode.equals(from)){
+            min = 200;
+            for(Node n : neighbors){
+                if(n.getDistFrom(i) < min){
+                    tmp = n;
+                    min = n.getDistFrom(i);
+                }
+            }
+            if(tmp.x > currentNode.x)
+                path.add(new Direction(tmp.x, tmp.y, Direction.RIGHT));
+            else if(tmp.x < currentNode.x)
+                path.add(new Direction(tmp.x, tmp.y, Direction.LEFT));
+            else if(tmp.y > currentNode.y)
+                path.add(new Direction(tmp.x, tmp.y, Direction.DOWN));
+            else
+                path.add(new Direction(tmp.x, tmp.y, Direction.TOP));
+            currentNode = tmp;
+            neighbors = currentNode.getNeighbors();
+        }
+        return path;
     }
 }

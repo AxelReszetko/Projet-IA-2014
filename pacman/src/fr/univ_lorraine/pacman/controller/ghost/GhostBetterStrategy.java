@@ -2,6 +2,7 @@ package fr.univ_lorraine.pacman.controller.ghost;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Stack;
 
 import com.badlogic.gdx.math.Vector2;
 
@@ -62,6 +63,7 @@ public class GhostBetterStrategy extends GhostController{
 
     private class Node{
         private int dist;
+        private int movePrice;
         private Node comeFrom;
         private int x, y;
         
@@ -69,10 +71,19 @@ public class GhostBetterStrategy extends GhostController{
             this.x = x;
             this.y = y;
             this.dist = 0;
+            this.movePrice = 0;
             this.comeFrom = null;
         }
 
-        public int getDist() {
+        public int getMovePrice() {
+			return movePrice;
+		}
+
+		public void setMovePrice(int movePrice) {
+			this.movePrice = movePrice;
+		}
+
+		public int getDist() {
             return dist;
         }
 
@@ -114,6 +125,11 @@ public class GhostBetterStrategy extends GhostController{
             Node other = (Node)o;
             return other.x == x && other.y == y;
         }
+        
+        public boolean samePlace(Node n)
+        {
+        	return (this.x == n.x && this.y==n.y);
+        }
     }
     
     public GhostBetterStrategy(World world)
@@ -131,123 +147,180 @@ public class GhostBetterStrategy extends GhostController{
 	public void update(float delta) {
 		// TODO Auto-generated method stub
 		Iterator<Ghost> iterGhost = world.ghostsIterator();
+		goal = new Node ((int)pac.getPosition().x,(int)pac.getPosition().y);
+		//goal = new Node(13,18);
+		int rank = 0;
+		if(ghPath.size()==0)
+		{
+			for(int i = 0; i< 4;++i)
+			{
+				ghPath.add(null);
+			}
+		}
 		while(iterGhost.hasNext())
 		{
 			Ghost gh = iterGhost.next();
+			iterGhost.next();
+			iterGhost.next();
+			iterGhost.next();
 			Node ghPosition = new Node((int)Math.floor(gh.getPosition().x),(int)Math.floor(gh.getPosition().y));
-			Node goal = new Node(13,19);
-			ArrayList<Direction> direction; 
-			direction = astar(ghPosition, goal, new ArrayList<Direction>());
-			for(int i = 0; i<direction.size();++i)
+			//ArrayList<Direction> path = new ArrayList<Direction>();
+			Stack<Direction> path = ghPath.get(rank);
+			if (path==null)//it it has no path, then compute it 
 			{
-				System.out.println(direction.get(i).toString());
+				path = astar(ghPosition, goal);
+				ghPath.set(rank, path);
+				System.out.println(path);
 			}
-			try {
-				Thread.sleep(60000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		/*	Vector2 pacPosition = pac.getPosition();
-			Vector2 ghPosition = gh.getPosition();
-			float deltaX = pacPosition.x - ghPosition.x;
-			float deltaY = pacPosition.y - ghPosition.y;
-			float ghX = gh.getPosition().x;
-			float ghY = gh.getPosition().y;
-			System.out.println("X: "+pacPosition.x+" Y: "+pacPosition.y);
-			
-			if(ghY<19 && ghY>10 && ghX<9 && ghX>13)
+			if(!path.isEmpty())
 			{
-				if(goal.equals(null))
-					goal=new Node (13,19);
-				
-				
-			}
-			
-			if (Math.abs(deltaY)>Math.abs(deltaX))
-			{
-				if(deltaY>0)
+				Node step = new Node(path.peek().x, path.peek().y);
+				if(step.samePlace(ghPosition))
+				{
+					path.pop();
+					ghPath.set(rank, path);
+					break;
+				}
+				if(path.peek().dir == 0)
+				{
 					gh.turnUp();
-				else
+				}
+				if(path.peek().dir == 1)
 					gh.turnDown();
-			}
-			else
-			{
-				if(deltaX>0)
+				if(path.peek().dir == 2)
 					gh.turnRight();
-				else
+				if(path.peek().dir == 3)
 					gh.turnLeft();
-			}	*/
+			}
 			gh.update(delta);
+			++rank;
 		}
 		
 	}
 	
-	private ArrayList<Direction> astar(Node from, Node to, ArrayList<Direction> path)
+	private Stack<Direction> astar(Node start, Node to)
 	{
-		if(!from.equals(to))
+		Stack<Direction> path = new Stack<Direction>();
+		ArrayList<Node> close = new ArrayList<Node>();//pathes visited
+		ArrayList<Node> open = new ArrayList<Node>(); //pathes to visit
+		close.add(new Node(11, 17));
+		close.add(new Node(12, 17));
+		close.add(new Node(13, 17));
+		close.add(new Node(14, 17));
+		close.add(new Node(15, 17));
+		close.add(new Node(11, 16));
+		close.add(new Node(12, 16));
+		close.add(new Node(13, 16));
+		close.add(new Node(14, 16));
+		close.add(new Node(15, 16));
+		close.add(new Node(11, 15));
+		close.add(new Node(12, 15));
+		close.add(new Node(13, 15));
+		close.add(new Node(14, 15));
+		close.add(new Node(15, 15));
+		open.add(start);
+		Node from = new Node(start.x, start.y);
+		int movePrice = 1;
+		
+		while(!(from.x == to.x && from.y == to.y))
 		{
-			ArrayList<Node> open = new ArrayList<>();
-			ArrayList<Node> close = new ArrayList<>();
-			open.add(from);
+			System.out.println("from: "+from.toString());
+			ArrayList<Node> adjacent = new ArrayList<Node>();
 			int localX = from.getX();
 			int localY = from.getY();
 			if(!(world.getElement(localX, localY - 1) instanceof Block))//look down
 			{
 				Node n = new Node(localX , localY - 1);
-				n.setComeFrom(from);
-				n.setDist(manhattan(n, to));
-				open.add(n);
+				if(!close.contains(n))
+				{
+					n.setComeFrom(from);
+					n.setDist(manhattan(n, to));
+					n.setMovePrice(movePrice);
+					adjacent.add(n);
+				}
 			}
 			if(!(world.getElement(localX, localY + 1) instanceof Block))//look up
 			{
 				Node n = new Node(localX, localY + 1);
-				n.setComeFrom(from);
-				n.setDist(manhattan(n, to));
-				open.add(n);
+				if(!close.contains(n))
+				{
+					n.setComeFrom(from);
+					n.setDist(manhattan(n, to));
+					n.setMovePrice(movePrice);
+					adjacent.add(n);
+				}
 			}
 			if(!(world.getElement(localX - 1, localY) instanceof Block))//look left
 			{
 				Node n = new Node(localX - 1, localY);
-				n.setComeFrom(from);
-				n.setDist(manhattan(n, to));
-				open.add(n);
+				if(!close.contains(n))
+				{
+					n.setComeFrom(from);
+					n.setDist(manhattan(n, to));
+					n.setMovePrice(movePrice);
+					adjacent.add(n);
+				}
 			}
 			if(!(world.getElement(localX + 1, localY) instanceof Block))//look right
 			{
 				Node n = new Node(localX + 1, localY);
-				n.setComeFrom(from);
-				n.setDist(manhattan(n, to));
-				open.add(n);
+				if(!close.contains(n))
+				{
+					n.setComeFrom(from);
+					n.setDist(manhattan(n, to));
+					n.setMovePrice(movePrice);
+					adjacent.add(n);
+				}
 			}
-
-			close.add(open.get(0));
-			open.remove(0);
-			Node lowest = open.get(0);
-			int i = 1;
-			for (i =1; i<open.size();++i)
+						
+			
+			Node chosen = null;// this will be the chosen one
+			for (int i =0; i<adjacent.size();++i)
+			{	
+				if(open.contains(adjacent.get(i)) && adjacent.get(i).movePrice > from.movePrice+movePrice) 
+				{
+					adjacent.get(i).setComeFrom(from);
+					adjacent.get(i).setDist(from.movePrice+movePrice);
+				}				
+				
+				if(chosen == null || (adjacent.get(i).dist + adjacent.get(i).movePrice < chosen.dist + chosen.movePrice) )
+					chosen = adjacent.get(i);	
+			}
+			System.out.println("chosen: "+chosen.toString());
+			
+			if(chosen == null) //this is not supposed to happen
 			{
-				if(open.get(i).dist < lowest.dist)
-					lowest = open.get(i);
+				System.out.println("I'm stuck! "+path.toString());
 			}
-			int dir = -1;
-			if(lowest.x < lowest.getComeFrom().x)
-				dir = 3;
-			if(lowest.x > lowest.getComeFrom().x)
-				dir = 2;
-			if(lowest.y < lowest.getComeFrom().y)
-				dir = 1;
-			if(lowest.y > lowest.getComeFrom().y)
-				dir = 0;
-			path.add(new Direction(lowest.x, lowest.y, dir));
-			astar(lowest, to, path);
-			return null;
+			
+			open.addAll(adjacent);
+			close.add(chosen);
+			open.remove(chosen);
+			
+			
+			from = chosen;
 		}
-		else
+		Node currentNode = close.get(close.size()-1);
+		while (currentNode.comeFrom != null)
 		{
-			return path;
+			path.push(new Direction(currentNode.x, currentNode.y, direction(currentNode)));
+			currentNode=currentNode.comeFrom;
 		}
+		return path;
 		
+	}
+	
+	private int direction(Node n)
+	{
+		if(n.x < n.getComeFrom().x)
+			return 3;
+		if(n.x > n.getComeFrom().x)
+			return 2;
+		if(n.y < n.getComeFrom().y)
+			return 1;
+		if(n.y > n.getComeFrom().y)
+			return 0;
+		return -1;
 	}
 	
 	private int manhattan(Node from, Node to)
@@ -256,7 +329,7 @@ public class GhostBetterStrategy extends GhostController{
 	}
 	
 	private Pacman pac = world.getPacman();
-	private ArrayList<Direction> ghPath = new ArrayList<>();
+	private ArrayList<Stack<Direction>> ghPath = new ArrayList<>();
 	private Node goal;
 
 }

@@ -24,6 +24,7 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	// Pour m�moriser les touches
 	private Map<Keys, Boolean> keys = new HashMap<Keys, Boolean>();
 	private Pacman pac;
+        private final double epsilon = 0.2;
 
 	public PacmanKeyController(World world) {
 		super(world);
@@ -41,7 +42,7 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	}
 
 	public void leftReleased() {
-		keys.put(Keys.LEFT, false);
+		//keys.put(Keys.LEFT, false);
 	}
 
 	public void rightPressed() {
@@ -49,7 +50,7 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	}
 
 	public void rightReleased() {
-		keys.put(Keys.RIGHT, false);
+		//keys.put(Keys.RIGHT, false);
 	}
 
 	public void upPressed() {
@@ -57,7 +58,7 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	}
 
 	public void upReleased() {
-		keys.put(Keys.UP, false);
+		//keys.put(Keys.UP, false);
 	}
 
 	public void downPressed() {
@@ -65,7 +66,7 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	}
 
 	public void downReleased() {
-		keys.put(Keys.DOWN, false);
+		//keys.put(Keys.DOWN, false);
 	}
 
 	/*
@@ -74,6 +75,7 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	public void update(float delta) {
 		// System.out.println("pacman="+pac);
 		// On tente un pas dans la direction choisie
+            if(canTurn()){
 		if (keys.get(Keys.LEFT))
 			pac.turnLeft();
 
@@ -85,6 +87,11 @@ public class PacmanKeyController extends PacmanController implements InputProces
 
 		if (keys.get(Keys.DOWN))
 			pac.turnDown();
+                keys.put(Keys.DOWN, false);
+                keys.put(Keys.LEFT, false);
+                keys.put(Keys.UP, false);
+                keys.put(Keys.RIGHT, false);
+            }
 
 		pac.update(delta);
 
@@ -157,5 +164,9 @@ public class PacmanKeyController extends PacmanController implements InputProces
 	public boolean scrolled(int amount) {
 		return false;
 	}
+        
+        private boolean canTurn() {
+            return pac.getPosition().x - (int) pac.getPosition().x < epsilon && pac.getPosition().y - (int) pac.getPosition().y < epsilon;
+    }
 
 }

@@ -76,8 +76,8 @@ public class GhostHunter extends GhostController {
         }
 
         public Node(Vector2 pos) {
-            this.x = (int) pos.x;
-            this.y = (int) pos.y;
+            this.x = (int) pos.x % 27;
+            this.y = (int) pos.y % 31;
             this.dist = 0;
             this.comeFrom = null;
         }
@@ -281,7 +281,7 @@ public class GhostHunter extends GhostController {
         ArrayList<Direction> path = new ArrayList<>();
         Node node;
         if(toVisit.isEmpty()){
-            System.err.println("error goTo : " + from + " ==> " + to);
+            throw new RuntimeException("error goto " + from + " ==> " + to);
         }
         node = toVisit.get(toVisit.size() - 1);
         while (node.getComeFrom() != null) {

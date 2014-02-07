@@ -27,6 +27,15 @@ public enum PacmanStrategy {
 		}
 
 	},
+        
+        QUANTUM {
+		@Override
+		public PacmanController getController(World world) {
+			
+			return new QuantumPacman(world);
+		}
+
+	},
 	
 	TEST {
 		@Override

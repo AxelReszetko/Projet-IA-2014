@@ -144,7 +144,7 @@ public class QuantumPacman extends PacmanController {
             if (path == null || path.isEmpty()) {
                 path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y);
             }/**/
-
+            System.err.println("position : " + delta);
             if (path.get(0).x == (int) pac.getPosition().x && path.get(0).y == (int) pac.getPosition().y) {
                 dir = path.get(0).dir;
                 path.remove(0);
@@ -176,55 +176,60 @@ public class QuantumPacman extends PacmanController {
         }
         if (dist > 0) {
             GameBasicElement e;
+            int i;
             switch (dir) {
                 case Direction.DOWN:
-                    for (int i = 1;; i++) {
+                    for (i = 1;; i++) {
                         e = world.getElement(pos.x, (pos.y + i * 30) % 31);
-                        if (e == null || !(e instanceof Block) && i > dist) {
-                            if ((pos.y + i * 30) % 31 > pos.y) {
-                                quantumTeleportation = -(((int)pac.getPosition().y + i * 30) % 31) + pac.getPosition().y;
-                            } else {
-                                quantumTeleportation = ((int)pac.getPosition().y + i * 30) % 31 - pac.getPosition().y;
+                        quantumTeleportation = pac.getPosition().y - (double) ((pos.y + i * 30) % 31);
+                        if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
+                            if(quantumTeleportation < 0){
+                                pac.turnUp();
+                                quantumTeleportation *= -1;
                             }
+                            System.err.println("tp down : " + pos + " ==> (" + pos.x + ", " + ((pos.y + i*30)%31) + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
                     break;
                 case Direction.LEFT:
-                    for (int i = 1;; i++) {
-                        e = world.getElement((pos.x + i) % 27, pos.y);
-                        if (e == null || !(e instanceof Block) && i > dist) {
-                            if ((pos.x + i) % 27 < pos.x) {
-                                quantumTeleportation = -(((int)pac.getPosition().x + i) % 27) + pac.getPosition().x;
-                            } else {
-                                quantumTeleportation = ((int)pac.getPosition().x + i) % 27 - pac.getPosition().x;
+                    for (i = 1;; i++) {
+                        e = world.getElement((pos.x + 26*i) % 27, pos.y);
+                        quantumTeleportation = pac.getPosition().x - (double) ((pos.x + 26*i) % 27);
+                        if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
+                            if(quantumTeleportation < 0){
+                                pac.turnRight();
+                                quantumTeleportation *= -1;
                             }
+                            System.err.println("tp left : " + pos + " ==> (" + ((pos.x + 26*i) % 27) + ", " + pos.y + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
                     break;
                 case Direction.RIGHT:
-                    for (int i = 1;; i++) {
-                        e = world.getElement((pos.x + 26*i) % 27, pos.y);
-                        if (e == null || !(e instanceof Block) && i > dist) {
-                            if ((pos.x + i * 26) % 27 > pos.x) {
-                                quantumTeleportation = -Math.abs(((pos.x + i * 26) % 27) - pac.getPosition().x);
-                            } else {
-                                quantumTeleportation = Math.abs((pos.x + i * 26) % 27 - pac.getPosition().x);
+                    for (i = 1;; i++) {
+                        e = world.getElement((pos.x + i) % 27, pos.y);
+                        quantumTeleportation = (double) ((pos.x + i) % 27) - pac.getPosition().x;
+                        if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
+                            if(quantumTeleportation < 0){
+                                pac.turnLeft();
+                                quantumTeleportation *= -1;
                             }
+                            System.err.println("tp right : " + pos + " ==> (" + ((pos.x + i) % 27) + ", " + pos.y + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
                     break;
-                case Direction.TOP:
-                    for (int i = 1;; i++) {
+                default:
+                    for (i = 1;; i++) {
                         e = world.getElement(pos.x, (pos.y + i) % 31);
-                        if (e == null || !(e instanceof Block) && i > dist) {
-                            if ((pos.y + i) % 31 < pos.y) {
-                                quantumTeleportation = -(((int)pac.getPosition().y + i) % 31) + pac.getPosition().y;
-                            } else {
-                                quantumTeleportation = ((int)pac.getPosition().y + i) % 31 - pac.getPosition().y;
+                        quantumTeleportation = (double) ((pos.y + i) % 31) - pac.getPosition().y;
+                        if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
+                            if(quantumTeleportation < 0){
+                                pac.turnDown();
+                                quantumTeleportation *= -1;
                             }
+                            System.err.println("tp up : " + pos + " ==> (" + + pos.x + ", " + ((pos.y + i)%31) + ", " + pos.y + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
@@ -232,15 +237,13 @@ public class QuantumPacman extends PacmanController {
             }
             delta = (float) (quantumTeleportation / 8.0);
             path = null;
-            System.err.println("tp to (" + (pac.getPosition().x + (dir < 2?0:quantumTeleportation)) + ", " + (pac.getPosition().y + (dir >= 2?0:quantumTeleportation)) +")");
         }
         try {
             pac.update(delta);
-            if(quantumTeleportation != 0)
-                System.err.println("teleported to " + pac.getPosition());
         } catch (Exception e) {
-            System.err.println("error tp to (" + pac.getPosition().x + (dir < 2?0:quantumTeleportation) + ", " + pac.getPosition().y + (dir > 2?0:quantumTeleportation) +")");
+            System.err.println("error : pos = " + pos + ", tp = " + quantumTeleportation + " (" + dir + ")");
         }
+
     }
 
     private ArrayList<Direction> findClosestPellet(int x, int y) {

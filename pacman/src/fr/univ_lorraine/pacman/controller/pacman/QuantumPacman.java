@@ -144,7 +144,6 @@ public class QuantumPacman extends PacmanController {
             if (path == null || path.isEmpty()) {
                 path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y);
             }/**/
-            System.err.println("position : " + delta);
             if (path.get(0).x == (int) pac.getPosition().x && path.get(0).y == (int) pac.getPosition().y) {
                 dir = path.get(0).dir;
                 path.remove(0);
@@ -183,25 +182,23 @@ public class QuantumPacman extends PacmanController {
                         e = world.getElement(pos.x, (pos.y + i * 30) % 31);
                         quantumTeleportation = pac.getPosition().y - (double) ((pos.y + i * 30) % 31);
                         if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
-                            if(quantumTeleportation < 0){
+                            if (quantumTeleportation < 0) {
                                 pac.turnUp();
                                 quantumTeleportation *= -1;
                             }
-                            System.err.println("tp down : " + pos + " ==> (" + pos.x + ", " + ((pos.y + i*30)%31) + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
                     break;
                 case Direction.LEFT:
                     for (i = 1;; i++) {
-                        e = world.getElement((pos.x + 26*i) % 27, pos.y);
-                        quantumTeleportation = pac.getPosition().x - (double) ((pos.x + 26*i) % 27);
+                        e = world.getElement((pos.x + 26 * i) % 27, pos.y);
+                        quantumTeleportation = pac.getPosition().x - (double) ((pos.x + 26 * i) % 27);
                         if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
-                            if(quantumTeleportation < 0){
+                            if (quantumTeleportation < 0) {
                                 pac.turnRight();
                                 quantumTeleportation *= -1;
                             }
-                            System.err.println("tp left : " + pos + " ==> (" + ((pos.x + 26*i) % 27) + ", " + pos.y + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
@@ -211,11 +208,10 @@ public class QuantumPacman extends PacmanController {
                         e = world.getElement((pos.x + i) % 27, pos.y);
                         quantumTeleportation = (double) ((pos.x + i) % 27) - pac.getPosition().x;
                         if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
-                            if(quantumTeleportation < 0){
+                            if (quantumTeleportation < 0) {
                                 pac.turnLeft();
                                 quantumTeleportation *= -1;
                             }
-                            System.err.println("tp right : " + pos + " ==> (" + ((pos.x + i) % 27) + ", " + pos.y + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
@@ -225,11 +221,10 @@ public class QuantumPacman extends PacmanController {
                         e = world.getElement(pos.x, (pos.y + i) % 31);
                         quantumTeleportation = (double) ((pos.y + i) % 31) - pac.getPosition().y;
                         if ((e == null || !(e instanceof Block)) && Math.abs(quantumTeleportation) > dist) {
-                            if(quantumTeleportation < 0){
+                            if (quantumTeleportation < 0) {
                                 pac.turnDown();
                                 quantumTeleportation *= -1;
                             }
-                            System.err.println("tp up : " + pos + " ==> (" + + pos.x + ", " + ((pos.y + i)%31) + ", " + pos.y + ") [" + quantumTeleportation + "] {" + dist + "}");
                             break;
                         }
                     }
@@ -238,11 +233,7 @@ public class QuantumPacman extends PacmanController {
             delta = (float) (quantumTeleportation / 8.0);
             path = null;
         }
-        try {
-            pac.update(delta);
-        } catch (Exception e) {
-            System.err.println("error : pos = " + pos + ", tp = " + quantumTeleportation + " (" + dir + ")");
-        }
+        pac.update(delta);
 
     }
 

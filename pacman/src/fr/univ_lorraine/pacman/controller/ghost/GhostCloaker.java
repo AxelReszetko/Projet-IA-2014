@@ -138,11 +138,11 @@ public class GhostCloaker extends GhostController {
             return hash;
         }
 
-        public double manathan(Vector2 pos) {
+        public double manhattan(Vector2 pos) {
             return Math.abs(pos.x - x) + Math.abs(pos.y - y);
         }
 
-        public double manathan(Node n) {
+        public double manhattan(Node n) {
             return Math.abs(n.x - x) + Math.abs(n.y - y);
         }
 
@@ -285,24 +285,29 @@ public class GhostCloaker extends GhostController {
                         targets = getTargets();
                     }
                     paths[i - 1] = goTo(i, lastPos[i], targets[i - 1].get(0));
+                    if (paths[i - 1].isEmpty()) {
+                        System.err.println("error goTo " + lastPos[i] + " ==> " + targets[i - 1].get(0));
+                    }
                 }
-                if (nextDir == null) {
-                    nextDir = paths[i - 1].get(0);
-                    paths[i - 1].remove(0);
-                }
-                if (lastPos[i].x == nextDir.x && lastPos[i].y == nextDir.y) {
-                    switch (nextDir.dir) {
-                        case Direction.DOWN:
-                            gh.turnDown();
-                            break;
-                        case Direction.TOP:
-                            gh.turnUp();
-                            break;
-                        case Direction.RIGHT:
-                            gh.turnRight();
-                            break;
-                        default:
-                            gh.turnLeft();
+                if (!paths[i - 1].isEmpty()) {
+                    if (nextDir == null) {
+                        nextDir = paths[i - 1].get(0);
+                        paths[i - 1].remove(0);
+                    }
+                    if (lastPos[i].x == nextDir.x && lastPos[i].y == nextDir.y) {
+                        switch (nextDir.dir) {
+                            case Direction.DOWN:
+                                gh.turnDown();
+                                break;
+                            case Direction.TOP:
+                                gh.turnUp();
+                                break;
+                            case Direction.RIGHT:
+                                gh.turnRight();
+                                break;
+                            default:
+                                gh.turnLeft();
+                        }
                     }
                 }
             }
@@ -407,14 +412,14 @@ public class GhostCloaker extends GhostController {
         }
         for (i = 0; i < 5; i++) {
             for (Node n : getNearestNodes(positions[i])) {
-                n.setDistFrom(i, n.manathan(positions[i]));
+                n.setDistFrom(i, n.manhattan(positions[i]));
                 visited.add(n);
                 for (Node n2 : n.getNeighbors()) {
                     if (!visited.contains(n2)) {
-                        n2.setDistFrom(i, n.getDistFrom(i) + n.manathan(n2));
+                        n2.setDistFrom(i, n.getDistFrom(i) + n.manhattan(n2));
                         toVisit.add(n2);
-                    } else if (n2.getDistFrom(i) > n.getDistFrom(i) + n.manathan(n2)) {
-                        n2.setDistFrom(i, n.getDistFrom(i) + n.manathan(n2));
+                    } else if (n2.getDistFrom(i) > n.getDistFrom(i) + n.manhattan(n2)) {
+                        n2.setDistFrom(i, n.getDistFrom(i) + n.manhattan(n2));
                         toVisit.add(n2);
                         visited.remove(n2);
                     }
@@ -427,12 +432,12 @@ public class GhostCloaker extends GhostController {
                 visited.add(n);
                 for (Node n2 : n.getNeighbors()) {
                     if (!visited.contains(n2)) {
-                        n2.setDistFrom(i, n.getDistFrom(i) + n.manathan(n2));
+                        n2.setDistFrom(i, n.getDistFrom(i) + n.manhattan(n2));
                         if (!toVisit.contains(n2)) {
                             toVisit.add(n2);
                         }
-                    } else if (n2.getDistFrom(i) > n.getDistFrom(i) + n.manathan(n2)) {
-                        n2.setDistFrom(i, n.getDistFrom(i) + n.manathan(n2));
+                    } else if (n2.getDistFrom(i) > n.getDistFrom(i) + n.manhattan(n2)) {
+                        n2.setDistFrom(i, n.getDistFrom(i) + n.manhattan(n2));
                         if (!toVisit.contains(n2)) {
                             toVisit.add(n2);
                         }
@@ -494,11 +499,11 @@ public class GhostCloaker extends GhostController {
         ArrayList<Node> targets = getNearestNodes(from.x, from.y);
         double min;
         while (!targets.contains(currentNode)) {
-            min = neighbors.get(0).getDistFrom(i);
+            min = neighbors.get(0).getDistFrom(i) + currentNode.manhattan(neighbors.get(0));
             for (Node n : neighbors) {
-                if (n.getDistFrom(i) <= min) {
+                if (n.getDistFrom(i) + currentNode.manhattan(n) <= min) {
                     tmp = n;
-                    min = n.getDistFrom(i);
+                    min = n.getDistFrom(i) + currentNode.manhattan(n);
                 }
             }
             if (tmp.x > currentNode.x) {

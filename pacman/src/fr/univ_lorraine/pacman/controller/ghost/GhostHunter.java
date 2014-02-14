@@ -15,6 +15,7 @@ public class GhostHunter extends GhostController {
     private static final double epsilon = 0.2;
     private Node[] lastPos;
     private ArrayList<Direction>[] paths;
+    private ArrayList<Direction>[] flee;
 
     private class Direction {
 
@@ -139,6 +140,7 @@ public class GhostHunter extends GhostController {
     public GhostHunter(World world) {
         super(world);
         paths = new ArrayList[4];
+        flee = new ArrayList[4];
         lastPos = new Node[4];
     }
 
@@ -149,28 +151,54 @@ public class GhostHunter extends GhostController {
         Ghost gh;
         while (iterGhost.hasNext()) {
             gh = iterGhost.next();
-            if (canTurn(gh)) {
-                if (lastPos[i] == null || lastPos[i].minDistanceTo(world.getPacman().getPosition()) > 3 || paths[i] == null || paths[i].isEmpty()) {
-                    lastPos[i] = new Node(world.getPacman().getPosition());
-                    paths[i] = goTo(new Node(gh.getPosition()), lastPos[i]);
+            if (gh.getState() != Ghost.State.HUNTING) {
+                if (flee[i] == null || flee[i].isEmpty()) {
+                    flee[i] = goTo(new Node(gh.getPosition()), new Node(13, 16));
                 }
-                int dir;
-                if (paths[i] != null && paths[i].get(0).x == (int) gh.getPosition().x && paths[i].get(0).y == (int) gh.getPosition().y) {
-                    dir = paths[i].get(0).dir;
-                    paths[i].remove(0);
-                    switch (dir) {
-                        case Direction.DOWN:
-                            gh.turnDown();
-                            break;
-                        case Direction.LEFT:
-                            gh.turnLeft();
-                            break;
-                        case Direction.RIGHT:
-                            gh.turnRight();
-                            break;
-                        case Direction.TOP:
-                            gh.turnUp();
-                            break;
+                if (flee[i] != null && !flee[i].isEmpty() && canTurn(gh, flee[i].get(0).getDir())) {
+                    if (flee[i].get(0).x == (int) gh.getPosition().x && flee[i].get(0).y == (int) gh.getPosition().y) {
+                        switch (flee[i].get(0).getDir()) {
+                            case Direction.DOWN:
+                                gh.turnDown();
+                                break;
+                            case Direction.LEFT:
+                                gh.turnLeft();
+                                break;
+                            case Direction.RIGHT:
+                                gh.turnRight();
+                                break;
+                            case Direction.TOP:
+                                gh.turnUp();
+                                break;
+                        }
+                        flee[i].remove(0);
+                    }
+                }
+            } else {
+                flee[i] = null;
+                if (canTurn(gh)) {
+                    if (lastPos[i] == null || lastPos[i].minDistanceTo(world.getPacman().getPosition()) > 3 || paths[i] == null || paths[i].isEmpty()) {
+                        lastPos[i] = new Node(world.getPacman().getPosition());
+                        paths[i] = goTo(new Node(gh.getPosition()), lastPos[i]);
+                    }
+                    int dir;
+                    if (paths[i] != null && paths[i].get(0).x == (int) gh.getPosition().x && paths[i].get(0).y == (int) gh.getPosition().y) {
+                        dir = paths[i].get(0).dir;
+                        paths[i].remove(0);
+                        switch (dir) {
+                            case Direction.DOWN:
+                                gh.turnDown();
+                                break;
+                            case Direction.LEFT:
+                                gh.turnLeft();
+                                break;
+                            case Direction.RIGHT:
+                                gh.turnRight();
+                                break;
+                            case Direction.TOP:
+                                gh.turnUp();
+                                break;
+                        }
                     }
                 }
             }
@@ -180,13 +208,14 @@ public class GhostHunter extends GhostController {
     }
 
     private ArrayList<Direction> goTo(Node from, Node to) {
-        if(from.equals(to))
+        if (from.equals(to)) {
             return null;
+        }
         ArrayList<Node> visited = new ArrayList<>();
         ArrayList<Node> toVisit = new ArrayList<>();
         toVisit.add(from);
         int x1, y1;
-        GameBasicElement e = null;
+        GameBasicElement e;
         while (!toVisit.isEmpty()) {
             x1 = toVisit.get(0).x;
             y1 = toVisit.get(0).y;
@@ -280,7 +309,7 @@ public class GhostHunter extends GhostController {
         }
         ArrayList<Direction> path = new ArrayList<>();
         Node node;
-        if(toVisit.isEmpty()){
+        if (toVisit.isEmpty()) {
             throw new RuntimeException("error goto " + from + " ==> " + to);
         }
         node = toVisit.get(toVisit.size() - 1);
@@ -303,4 +332,11 @@ public class GhostHunter extends GhostController {
         return g.getPosition().x - (int) g.getPosition().x < epsilon && g.getPosition().y - (int) g.getPosition().y < epsilon;
     }
 
+    private boolean canTurn(Ghost g, int dir) {
+        if (dir == Direction.DOWN || dir == Direction.TOP) {
+            return g.getPosition().x - (int) g.getPosition().x < epsilon;
+        } else {
+            return g.getPosition().y - (int) g.getPosition().y < epsilon;
+        }
+    }
 }

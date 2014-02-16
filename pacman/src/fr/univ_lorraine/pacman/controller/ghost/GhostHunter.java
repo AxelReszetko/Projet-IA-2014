@@ -151,7 +151,7 @@ public class GhostHunter extends GhostController {
         Ghost gh;
         while (iterGhost.hasNext()) {
             gh = iterGhost.next();
-            if (gh.getState() != Ghost.State.HUNTING) {
+            if (gh.getState() == Ghost.State.DEAD) {
                 if (flee[i] == null || flee[i].isEmpty()) {
                     flee[i] = goTo(new Node(gh.getPosition()), new Node(13, 16));
                 }
@@ -174,7 +174,11 @@ public class GhostHunter extends GhostController {
                         flee[i].remove(0);
                     }
                 }
-            } else {
+            } 
+            else if(gh.getState() == Ghost.State.HUNTED){
+                
+            }
+            else {
                 flee[i] = null;
                 if (canTurn(gh)) {
                     if (lastPos[i] == null || lastPos[i].minDistanceTo(world.getPacman().getPosition()) > 3 || paths[i] == null || paths[i].isEmpty()) {

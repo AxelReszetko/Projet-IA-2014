@@ -253,10 +253,9 @@ public class GhostCloaker extends GhostController {
             i++;
         }
 
-        ArrayList<Node>[] targets = null;
+        Node[] targets = null;
         if (needUpdate) {
             updateGraph();
-            targets = getTargets();
             for (int k = 0; i < 4; i++) {
                 paths[k] = null;
             }
@@ -271,7 +270,7 @@ public class GhostCloaker extends GhostController {
             nextDir = null;
             if (gh.getState() == Ghost.State.DEAD) {
                 if (flee[i - 1] == null || flee[i - 1].isEmpty()) {
-                    flee[i - 1] = goTo(i, new Node(13, 18));
+                    flee[i - 1] = goTo(i, new Node(gh.getPosition()), new Node(13, 18));
                 }
                 nextDir = flee[i - 1].get(0);
                 flee[i - 1].remove(0);
@@ -280,57 +279,37 @@ public class GhostCloaker extends GhostController {
             } else if (gh.getState() == Ghost.State.HUNTED) {
                 flee[i - 1] = null;
                 double dist = 0, tmp;
-                Node dest = null;/*
-                 int[] pac = new int[2], ghost = new int[2];
-                 pac[0] = (int) world.getPacman().getPosition().x;
-                 pac[1] = (int) world.getPacman().getPosition().y;
-                 ghost[0] = (int) gh.getPosition().x;
-                 ghost[0] = (int) gh.getPosition().y;*/
-
+                Node dest = null;
                 ArrayList<Node> neighbors = getNearestNodes(gh.getPosition());
                 if (neighbors.size() == 1) {
                     neighbors = neighbors.get(0).getNeighbors();
                 }
                 for (Node n : neighbors) {
                     tmp = n.getDistFrom(0) + n.manhattan(gh.getPosition());
-                    if (tmp > dist) {
+                    if (tmp > dist && !isPathBlocked(gh, n)) {
                         dist = tmp;
                         dest = n;
                     }
                 }
-                nextDir = goTo(i, dest).get(0);
-                System.out.println("Ghost " + (i - 1) + " : goto " + dest);
+                nextDir = goTo(i, new Node(gh.getPosition()), dest).get(0);
+                System.out.println("Ghost " + (i - 1) + " (fleeing): goto " + dest);
             } else {
                 flee[i - 1] = null;
-                if (i == 1) {
-                    if (needUpdate || paths[0] == null || paths[0].isEmpty()) {
-                        paths[0] = goTo(1, new Node((int) world.getPacman().getPosition().x, (int) world.getPacman().getPosition().y));
+                if (paths[i - 1] == null || paths[i - 1].isEmpty()) {
+                    if (targets == null || targets[i - 1] == null) {
+                        targets = affectTargets();
                     }
-                    if(!paths[0].isEmpty()){
-                    nextDir = paths[0].get(0);
-                    paths[0].remove(0);
-                    }
-                    System.out.println("ghost 0 : hunting pacman ");
-                } else {
-                    if (paths[i - 1] == null || paths[i - 1].isEmpty()) {
-                        if (targets == null) {
-                            targets = getTargets();
-                        }
-                        paths[i - 1] = goTo(i, targets[i - 1].get(0));
-                        System.out.println("Ghost " + (i - 1) + " : goto " + targets[i - 1].get(0));
+                    paths[i - 1] = goTo(i, new Node(gh.getPosition()), targets[i - 1]);
+                    System.out.println("Ghost " + (i - 1) + " : goto " + targets[i - 1]);
 
-                    }
-                    if (!paths[i - 1].isEmpty()) {
-                        nextDir = paths[i - 1].get(0);
-                        paths[i - 1].remove(0);
+                }
+                if (!paths[i - 1].isEmpty()) {
+                    nextDir = paths[i - 1].get(0);
+                    paths[i - 1].remove(0);
 
-                    }
                 }
             }
             if (turn && nextDir != null) {
-                //here find a good algorithm to affect each ghost to a different node
-                //interesting nodes for the i\ieme{} ghost is stored in targets[i]
-
                 if (lastPos[i].x == nextDir.x && lastPos[i].y == nextDir.y) {
                     switch (nextDir.dir) {
                         case Direction.DOWN:
@@ -527,16 +506,16 @@ public class GhostCloaker extends GhostController {
         return targets;
     }
 
-    private ArrayList<Direction> goTo(int i, Node to) {
+    private ArrayList<Direction> goTo(int i, Node from, Node to) {
         ArrayList<Direction> path = new ArrayList<>();
         Node currentNode = to;
-        Node tmp = null;
-        Node from = lastPos[i];
+        Node tmp;
         ArrayList<Node> neighbors = getNearestNodes(to.x, to.y);
         ArrayList<Node> targets = getNearestNodes(from.x, from.y);
         double min;
         while (!targets.contains(currentNode)) {
             min = neighbors.get(0).getDistFrom(i) + currentNode.manhattan(neighbors.get(0));
+            tmp = neighbors.get(0);
             for (Node n : neighbors) {
                 if (n.getDistFrom(i) + currentNode.manhattan(n) <= min) {
                     tmp = n;
@@ -549,7 +528,7 @@ public class GhostCloaker extends GhostController {
                 path.add(0, new Direction(tmp.x, tmp.y, Direction.RIGHT));
             } else if (tmp.y > currentNode.y) {
                 path.add(0, new Direction(tmp.x, tmp.y, Direction.DOWN));
-            } else if (tmp.y < currentNode.y){
+            } else if (tmp.y < currentNode.y) {
                 path.add(0, new Direction(tmp.x, tmp.y, Direction.TOP));
             }
             currentNode = tmp;
@@ -567,5 +546,83 @@ public class GhostCloaker extends GhostController {
             }
         }
         return path;
+    }
+
+    private boolean isPathBlocked(Ghost gh, Node to) {
+        Node pacman = new Node((int) world.getPacman().getPosition().x, (int) world.getPacman().getPosition().y);
+        ArrayList<Node> neighbors = pacman.getNeighbors();
+        if (neighbors.size() == 1) {
+            neighbors = neighbors.get(0).getNeighbors();
+            neighbors.add(pacman);
+        }
+        return neighbors.contains(to) && neighbors.containsAll(getNearestNodes(gh.getPosition()));
+    }
+
+    private Node[] affectTargets() {
+        Node[] ret = new Node[4];
+        ArrayList<Node>[] targets = getTargets();
+        Node pacman = new Node((int) world.getPacman().getPosition().x, (int) world.getPacman().getPosition().y);
+        double min = 500;
+        double tmp;
+        boolean[] hasResult = new boolean[3];
+        for (Node t1 : targets[0]) {
+            hasResult[0] = false;
+            for (Node t2 : targets[1]) {
+                if (!t1.equals(t2)) {
+                    hasResult[0] = true;
+                    hasResult[1] = false;
+                    for (Node t3 : targets[2]) {
+                        if (!t3.equals(t2) && !t3.equals(t1)) {
+                            hasResult[1] = true;
+                            hasResult[2] = false;
+                            for (Node t4 : targets[3]) {
+                                if (!t4.equals(t3) && !t4.equals(t2) && !t3.equals(t1)) {
+                                    hasResult[2] = true;
+                                    tmp = t1.getDistFrom(0) + t2.getDistFrom(0) + t3.getDistFrom(0) + t4.getDistFrom(0);
+                                    tmp /= 4;
+                                    if (tmp < min) {
+                                        min = tmp;
+                                        ret[0] = t1;
+                                        ret[1] = t2;
+                                        ret[2] = t3;
+                                        ret[3] = t4;
+                                    }
+                                }
+                            }
+                            if (!hasResult[2]) {
+                                tmp = t1.getDistFrom(0) + t2.getDistFrom(0) + t3.getDistFrom(0);
+                                tmp /= 3;
+                                if (tmp < min) {
+                                    min = tmp;
+                                    ret[0] = t1;
+                                    ret[1] = t2;
+                                    ret[2] = t3;
+                                    ret[3] = pacman;
+                                }
+                            }
+                        }
+                    }
+                    if (!hasResult[1]) {
+                        tmp = t1.getDistFrom(0) + t2.getDistFrom(0);
+                        tmp /= 2;
+                        if (tmp < min) {
+                            min = tmp;
+                            ret[0] = t1;
+                            ret[1] = t2;
+                            ret[2] = pacman;
+                            ret[3] = pacman;
+                        }
+                    }
+                }
+            }
+            if (!hasResult[0] && t1.getDistFrom(0) < min) {
+                min = t1.getDistFrom(0);
+                ret[0] = t1;
+                ret[1] = pacman;
+                ret[2] = pacman;
+                ret[3] = pacman;
+            }
+        }
+        return ret;
     }
 }

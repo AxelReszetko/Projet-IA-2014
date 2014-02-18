@@ -186,13 +186,17 @@ public class PacmanWTF extends PacmanController {
     @Override
     public void update(float delta) {
     	int distGhost = 3;
-    	int distSP=10;
-    	int time = 7000;
-    	if(hunt&&pac.getState()==State.HUNTING) this.temps = java.lang.System.currentTimeMillis() - chrono ;
+    	int distSP=15;
+    	int time =7000;
+    	if(hunt&&pac.getState()==State.HUNTING) {
+    		this.temps = java.lang.System.currentTimeMillis() - chrono ;
+    		lastHunt=0;    	
+    	}
     	if(hunt &&pac.getState()!=State.HUNTING){
 			this.hunt=false;
-			this.temps = java.lang.System.currentTimeMillis() - chrono ;
+			this.temps = 0 ;
 			this.lastHunt=java.lang.System.currentTimeMillis();
+			
     	}
     	if(pac.getState()==State.HUNTING&&!hunt){
 			this.hunt=true;			
@@ -222,7 +226,7 @@ public class PacmanWTF extends PacmanController {
     	
     	
         if (canTurn()) {
-        	if ((path == null || path.isEmpty())&&java.lang.System.currentTimeMillis()-lastHunt>time&&stillSuperPellet()&&closeSuperPellet()<distSP){
+        	if ((path == null || path.isEmpty()) && !hunt && java.lang.System.currentTimeMillis()-lastHunt>time && stillSuperPellet() && closeSuperPellet()<distSP){
         		path=findClosestSuperPellet((int) pac.getPosition().x, (int) pac.getPosition().y, distGhost);
         		if(path!=null&&!path.isEmpty())System.out.println("PACMAN ====== Go To SuperPellet! ======");
         	}
@@ -623,7 +627,7 @@ public class PacmanWTF extends PacmanController {
     
     
     private boolean isGhost(int x, int y){
-    if(hunt&&temps>600) return false;
+    if(hunt&&temps>700) return false;
      Node nod=new Node(x,y);
    	 if(nod.isInArrayList(ghostsNeighbors))		 return true;
    	 

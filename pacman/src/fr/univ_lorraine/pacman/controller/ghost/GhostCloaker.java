@@ -5,7 +5,6 @@ import java.util.Iterator;
 
 import fr.univ_lorraine.pacman.controller.GhostController;
 import fr.univ_lorraine.pacman.model.Block;
-import fr.univ_lorraine.pacman.model.GameMoveableBasicElement;
 import fr.univ_lorraine.pacman.model.Ghost;
 import fr.univ_lorraine.pacman.model.World;
 import java.util.ArrayList;
@@ -69,6 +68,7 @@ public class GhostCloaker extends GhostController {
         private int x, y;
         private ArrayList<Node> neighbors;
         private Node comeFrom; //used for pathfinding
+        private double weight;
         private double[] distFrom; //distFrom[0] = distance from pacman to this node,
         //distFrom[i] = distance from the ghost i-1 to this node
 
@@ -239,8 +239,9 @@ public class GhostCloaker extends GhostController {
         boolean needUpdate = false;
         Iterator<Ghost> it = world.ghostsIterator();
         Ghost gh;
-        if (!lastPos[0].equals(new Node(world.getPacman().getPosition()))) {
-            lastPos[0] = new Node(world.getPacman().getPosition());
+        Node pac = new Node(world.getPacman().getPosition());
+        if (!lastPos[0].equals(pac)) {
+            lastPos[0] = pac;
             needUpdate = true;
         }
         int i = 1;
@@ -286,22 +287,27 @@ public class GhostCloaker extends GhostController {
                 }
                 for (Node n : neighbors) {
                     tmp = n.getDistFrom(0) + n.manhattan(gh.getPosition());
-                    if (tmp > dist && !isPathBlocked(gh, n)) {
+                    if ((tmp > dist || tmp > 3) && !isPathBlocked(gh, n)) {
                         dist = tmp;
                         dest = n;
+                        if (tmp > 3) {
+                            break;
+                        }
                     }
                 }
                 nextDir = goTo(i, new Node(gh.getPosition()), dest).get(0);
                 System.out.println("Ghost " + (i - 1) + " (fleeing): goto " + dest);
+
             } else {
+                Node target;
                 flee[i - 1] = null;
                 if (paths[i - 1] == null || paths[i - 1].isEmpty()) {
                     if (targets == null || targets[i - 1] == null) {
                         targets = affectTargets();
                     }
-                    paths[i - 1] = goTo(i, new Node(gh.getPosition()), targets[i - 1]);
-                    System.out.println("Ghost " + (i - 1) + " : goto " + targets[i - 1]);
-
+                    target = targets[i - 1] == null ? pac : targets[i - 1];
+                             paths[i - 1] = goTo(i, new Node(gh.getPosition()), target);
+                    System.out.println("Ghost " + (i - 1) + " : goto " + target);
                 }
                 if (!paths[i - 1].isEmpty()) {
                     nextDir = paths[i - 1].get(0);
@@ -508,42 +514,47 @@ public class GhostCloaker extends GhostController {
 
     private ArrayList<Direction> goTo(int i, Node from, Node to) {
         ArrayList<Direction> path = new ArrayList<>();
-        Node currentNode = to;
-        Node tmp;
-        ArrayList<Node> neighbors = getNearestNodes(to.x, to.y);
-        ArrayList<Node> targets = getNearestNodes(from.x, from.y);
-        double min;
-        while (!targets.contains(currentNode)) {
-            min = neighbors.get(0).getDistFrom(i) + currentNode.manhattan(neighbors.get(0));
-            tmp = neighbors.get(0);
-            for (Node n : neighbors) {
-                if (n.getDistFrom(i) + currentNode.manhattan(n) <= min) {
-                    tmp = n;
-                    min = n.getDistFrom(i) + currentNode.manhattan(n);
+        Node currentNode;
+        ArrayList<Node> toVisit = getNearestNodes(from.x, from.y);
+        from.comeFrom = null;
+        for (Node n : graph) {
+            n.weight = -1;
+        }
+        for (Node n : toVisit) {
+            n.comeFrom = from;
+            n.weight = n.manhattan(from);
+        }
+        while (!toVisit.isEmpty()) {
+            currentNode = toVisit.get(0);
+            for (Node tmp : currentNode.getNeighbors()) {
+                if (tmp.weight > currentNode.weight + tmp.manhattan(currentNode) || tmp.weight < 0) {
+                    tmp.weight = currentNode.weight + tmp.manhattan(currentNode);
+                    tmp.comeFrom = currentNode;
+                    if (!toVisit.contains(tmp)) {
+                        toVisit.add(tmp);
+                    }
                 }
             }
-            if (tmp.x > currentNode.x) {
-                path.add(0, new Direction(tmp.x, tmp.y, Direction.LEFT));
-            } else if (tmp.x < currentNode.x) {
-                path.add(0, new Direction(tmp.x, tmp.y, Direction.RIGHT));
-            } else if (tmp.y > currentNode.y) {
-                path.add(0, new Direction(tmp.x, tmp.y, Direction.DOWN));
-            } else if (tmp.y < currentNode.y) {
-                path.add(0, new Direction(tmp.x, tmp.y, Direction.TOP));
-            }
-            currentNode = tmp;
-            neighbors = currentNode.getNeighbors();
+            toVisit.remove(0);
         }
-        if (!targets.contains(from)) {
-            if (from.x > currentNode.x) {
-                path.add(0, new Direction(from.x, from.y, Direction.LEFT));
-            } else if (from.x < currentNode.x) {
-                path.add(0, new Direction(from.x, from.y, Direction.RIGHT));
-            } else if (from.y > currentNode.y) {
-                path.add(0, new Direction(from.x, from.y, Direction.DOWN));
-            } else {
-                path.add(0, new Direction(from.x, from.y, Direction.TOP));
+        for (Node tmp : getNearestNodes(to.x, to.y)) {
+            if (to.weight > tmp.weight + tmp.manhattan(to) || to.weight < 0) {
+                to.weight = tmp.weight + tmp.manhattan(to);
+                to.comeFrom = tmp;
             }
+        }
+        currentNode = to;
+        while (currentNode.getComeFrom() != null) {
+            if (currentNode.getX() - currentNode.getComeFrom().getX() < 0) {
+                path.add(0, new Direction(currentNode.getComeFrom().getX(), currentNode.getComeFrom().getY(), Direction.LEFT));
+            } else if (currentNode.getX() - currentNode.getComeFrom().getX() > 0) {
+                path.add(0, new Direction(currentNode.getComeFrom().getX(), currentNode.getComeFrom().getY(), Direction.RIGHT));
+            } else if (currentNode.getY() - currentNode.getComeFrom().getY() < 0) {
+                path.add(0, new Direction(currentNode.getComeFrom().getX(), currentNode.getComeFrom().getY(), Direction.DOWN));
+            } else {
+                path.add(0, new Direction(currentNode.getComeFrom().getX(), currentNode.getComeFrom().getY(), Direction.TOP));
+            }
+            currentNode = currentNode.getComeFrom();
         }
         return path;
     }
@@ -561,7 +572,6 @@ public class GhostCloaker extends GhostController {
     private Node[] affectTargets() {
         Node[] ret = new Node[4];
         ArrayList<Node>[] targets = getTargets();
-        Node pacman = new Node((int) world.getPacman().getPosition().x, (int) world.getPacman().getPosition().y);
         double min = 500;
         double tmp;
         boolean[] hasResult = new boolean[3];
@@ -597,7 +607,7 @@ public class GhostCloaker extends GhostController {
                                     ret[0] = t1;
                                     ret[1] = t2;
                                     ret[2] = t3;
-                                    ret[3] = pacman;
+                                    ret[3] = null;
                                 }
                             }
                         }
@@ -609,8 +619,8 @@ public class GhostCloaker extends GhostController {
                             min = tmp;
                             ret[0] = t1;
                             ret[1] = t2;
-                            ret[2] = pacman;
-                            ret[3] = pacman;
+                            ret[2] = null;
+                            ret[3] = null;
                         }
                     }
                 }
@@ -618,9 +628,18 @@ public class GhostCloaker extends GhostController {
             if (!hasResult[0] && t1.getDistFrom(0) < min) {
                 min = t1.getDistFrom(0);
                 ret[0] = t1;
-                ret[1] = pacman;
-                ret[2] = pacman;
-                ret[3] = pacman;
+                ret[1] = null;
+                ret[2] = null;
+                ret[3] = null;
+            }
+        }
+        Iterator<Ghost> it = world.ghostsIterator();
+        Ghost gh;
+        Vector2 pacman = world.getPacman().getPosition();
+        for (int i = 0; i < 4; i++) {
+            gh = it.next();
+            if (ret[i].manhattan(gh.getPosition()) >= Math.abs(gh.getPosition().x - pacman.x) + Math.abs(gh.getPosition().y - pacman.y)) {
+                ret[i] = null;
             }
         }
         return ret;

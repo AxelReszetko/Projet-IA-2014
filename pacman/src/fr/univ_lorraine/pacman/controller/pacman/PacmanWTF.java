@@ -63,6 +63,7 @@ public class PacmanWTF extends PacmanController {
 
     private class Node{
         private int dist;
+        private int threat;
         private Node comeFrom;
         private int x, y;
         
@@ -70,6 +71,7 @@ public class PacmanWTF extends PacmanController {
             this.x = x;
             this.y = y;
             this.dist = 0;
+            this.threat = 0;
             this.comeFrom = null;
         }
 
@@ -157,10 +159,12 @@ public class PacmanWTF extends PacmanController {
     }
 
     private ArrayList<Direction> findClosestPellet(int x, int y) {
-        ArrayList<Node> visited = new ArrayList<Node>();
-        ArrayList<Node> toVisit = new ArrayList<Node>();
+        ArrayList<Node> visited = new ArrayList<>();
+        ArrayList<Node> toVisit = new ArrayList<>();
         toVisit.add(new Node(x,y));
         GameBasicElement e = null;
+        Node pellet = null;
+        int threat;
         while(!toVisit.isEmpty()){
             x = toVisit.get(0).x;
             y = toVisit.get(0).y;
@@ -175,6 +179,7 @@ public class PacmanWTF extends PacmanController {
                 if(i >= visited.size()){
                     Node node = new Node((x + 26)%27, y);
                     node.setComeFrom(toVisit.get(0));
+                    node.setDist(toVisit.get(0).dist + 1);
                     toVisit.add(node);
                     if(e != null)
                         break;

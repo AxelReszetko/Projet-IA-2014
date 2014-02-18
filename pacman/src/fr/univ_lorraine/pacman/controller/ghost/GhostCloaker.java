@@ -271,7 +271,7 @@ public class GhostCloaker extends GhostController {
             nextDir = null;
             if (gh.getState() == Ghost.State.DEAD) {
                 if (flee[i - 1] == null || flee[i - 1].isEmpty()) {
-                    flee[i - 1] = goTo(i, new Node(gh.getPosition()), new Node(13, 18));
+                    flee[i - 1] = goTo(new Node(gh.getPosition()), new Node(13, 18));
                 }
                 nextDir = flee[i - 1].get(0);
                 flee[i - 1].remove(0);
@@ -295,8 +295,9 @@ public class GhostCloaker extends GhostController {
                         }
                     }
                 }
-                nextDir = goTo(i, new Node(gh.getPosition()), dest).get(0);
+                nextDir = goTo(new Node(gh.getPosition()), dest).get(0);
                 System.out.println("Ghost " + (i - 1) + " (fleeing): goto " + dest);
+                /**/
 
             } else {
                 Node target;
@@ -306,10 +307,10 @@ public class GhostCloaker extends GhostController {
                         targets = affectTargets();
                     }
                     target = targets[i - 1] == null ? pac : targets[i - 1];
-                             paths[i - 1] = goTo(i, new Node(gh.getPosition()), target);
+                    paths[i - 1] = goTo(new Node(gh.getPosition()), target);
                     System.out.println("Ghost " + (i - 1) + " : goto " + target);
                 }
-                if (!paths[i - 1].isEmpty()) {
+                if (paths[i - 1] != null && !paths[i - 1].isEmpty()) {
                     nextDir = paths[i - 1].get(0);
                     paths[i - 1].remove(0);
 
@@ -512,35 +513,49 @@ public class GhostCloaker extends GhostController {
         return targets;
     }
 
-    private ArrayList<Direction> goTo(int i, Node from, Node to) {
+    private ArrayList<Direction> goTo(Node from, Node to) {
         ArrayList<Direction> path = new ArrayList<>();
         Node currentNode;
         ArrayList<Node> toVisit = getNearestNodes(from.x, from.y);
-        from.comeFrom = null;
-        for (Node n : graph) {
-            n.weight = -1;
-        }
-        for (Node n : toVisit) {
-            n.comeFrom = from;
-            n.weight = n.manhattan(from);
-        }
-        while (!toVisit.isEmpty()) {
-            currentNode = toVisit.get(0);
-            for (Node tmp : currentNode.getNeighbors()) {
-                if (tmp.weight > currentNode.weight + tmp.manhattan(currentNode) || tmp.weight < 0) {
-                    tmp.weight = currentNode.weight + tmp.manhattan(currentNode);
-                    tmp.comeFrom = currentNode;
-                    if (!toVisit.contains(tmp)) {
-                        toVisit.add(tmp);
-                    }
+        if (toVisit.containsAll(getNearestNodes(to.x, to.y))) {
+            if (to.equals(from)) {
+                return null;
+            }
+            to.comeFrom = from;
+        } else {
+            from.comeFrom = null;
+            for (Node n : graph) {
+                n.weight = -1;
+            }
+            if (toVisit.size() == 1) {
+                toVisit.get(0).comeFrom = null;
+                toVisit.get(0).weight = 0;
+            } else {
+                for (Node n : toVisit) {
+                    n.comeFrom = from;
+                    n.weight = n.manhattan(from);
                 }
             }
-            toVisit.remove(0);
-        }
-        for (Node tmp : getNearestNodes(to.x, to.y)) {
-            if (to.weight > tmp.weight + tmp.manhattan(to) || to.weight < 0) {
-                to.weight = tmp.weight + tmp.manhattan(to);
-                to.comeFrom = tmp;
+            to.weight = -1;
+            to.comeFrom = null;
+            while (!toVisit.isEmpty()) {
+                currentNode = toVisit.get(0);
+                for (Node tmp : currentNode.getNeighbors()) {
+                    if (tmp.weight > currentNode.weight + tmp.manhattan(currentNode) || tmp.weight < 0) {
+                        tmp.weight = currentNode.weight + tmp.manhattan(currentNode);
+                        tmp.comeFrom = currentNode;
+                        if (!toVisit.contains(tmp)) {
+                            toVisit.add(tmp);
+                        }
+                    }
+                }
+                toVisit.remove(0);
+            }
+            for (Node tmp : getNearestNodes(to.x, to.y)) {
+                if (to.weight > tmp.weight + tmp.manhattan(to) || to.weight < 0) {
+                    to.weight = tmp.weight + tmp.manhattan(to);
+                    to.comeFrom = tmp;
+                }
             }
         }
         currentNode = to;
@@ -638,7 +653,7 @@ public class GhostCloaker extends GhostController {
         Vector2 pacman = world.getPacman().getPosition();
         for (int i = 0; i < 4; i++) {
             gh = it.next();
-            if (ret[i].manhattan(gh.getPosition()) >= Math.abs(gh.getPosition().x - pacman.x) + Math.abs(gh.getPosition().y - pacman.y)) {
+            if (ret[i] != null && ret[i].manhattan(gh.getPosition()) >= Math.abs(gh.getPosition().x - pacman.x) + Math.abs(gh.getPosition().y - pacman.y)) {
                 ret[i] = null;
             }
         }

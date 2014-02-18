@@ -1,16 +1,18 @@
 package fr.univ_lorraine.pacman.controller.pacman;
 
+import com.badlogic.gdx.math.Vector2;
 import fr.univ_lorraine.pacman.controller.PacmanController;
 import fr.univ_lorraine.pacman.model.Block;
 import fr.univ_lorraine.pacman.model.GameBasicElement;
+import fr.univ_lorraine.pacman.model.Ghost;
 import fr.univ_lorraine.pacman.model.Pacman;
 import fr.univ_lorraine.pacman.model.World;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class PacmanWTF extends PacmanController {
 
     private Pacman pac;
-    private boolean prem;
     private int dir;
     private ArrayList<Direction> path;
     private static final double epsilon = 0.2;
@@ -163,13 +165,11 @@ public class PacmanWTF extends PacmanController {
         ArrayList<Node> toVisit = new ArrayList<>();
         toVisit.add(new Node(x,y));
         GameBasicElement e = null;
-        Node pellet = null;
-        int threat;
         while(!toVisit.isEmpty()){
             x = toVisit.get(0).x;
             y = toVisit.get(0).y;
             e = world.getElement((x + 26)%27, y);
-            if(e == null || !(e instanceof Block)){
+            if((e == null || !(e instanceof Block)) && !isGhost((x + 26)%27, y)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
                     if(visited.get(i).equals(new Node((x + 26)%27, y))){
@@ -191,7 +191,7 @@ public class PacmanWTF extends PacmanController {
                 }
             }
             e = world.getElement((x+1)%27, y);
-            if(e == null || !(e instanceof Block)){
+            if((e == null || !(e instanceof Block)) && !isGhost((x+1)%27, y)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
                     if(visited.get(i).equals(new Node((x+1)%27, y))){
@@ -212,7 +212,7 @@ public class PacmanWTF extends PacmanController {
                 }
             }
             e = world.getElement(x, y-1);
-            if(e == null || !(e instanceof Block)){
+            if((e == null || !(e instanceof Block)) && !isGhost(x, y-1)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
                     if(visited.get(i).equals(new Node(x, y-1))){
@@ -233,7 +233,7 @@ public class PacmanWTF extends PacmanController {
                 }
             }
             e = world.getElement(x, y+1);
-            if(e == null || !(e instanceof Block)){
+            if((e == null || !(e instanceof Block)) && !isGhost(x, y+1)){
                 int i;
                 for(i = 0; i < visited.size(); i++){
                     if(visited.get(i).equals(new Node(x, y+1))){
@@ -261,6 +261,7 @@ public class PacmanWTF extends PacmanController {
         Node node;
         if(e != null && !(e instanceof Block)){
             node = toVisit.get(toVisit.size()-1);
+            System.out.println("Pacman : goto " + node);
             while(node.getComeFrom() != null){
                 if(node.getX() - node.getComeFrom().getX() < 0){
                     path.add(0, new Direction(node.getComeFrom().getX(),node.getComeFrom().getY(),Direction.LEFT));
@@ -282,5 +283,18 @@ public class PacmanWTF extends PacmanController {
 
     private boolean canTurn() {
         return pac.getPosition().x - (int) pac.getPosition().x < epsilon && pac.getPosition().y - (int) pac.getPosition().y < epsilon;
+    }
+    
+    private boolean isGhost(int x, int y){
+        Iterator<Ghost> it = world.ghostsIterator();
+        Vector2 gh;
+        if(pac.getState() == Pacman.State.HUNTING)
+            return false;
+        while(it.hasNext()){
+            gh = it.next().getPosition();
+            if(Math.abs(gh.x-x) <= 1 && Math.abs(gh.y-y) <= 1)
+                return true;
+        }
+        return false;
     }
 }

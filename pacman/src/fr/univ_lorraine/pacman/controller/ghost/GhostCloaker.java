@@ -273,9 +273,11 @@ public class GhostCloaker extends GhostController {
                 if (flee[i - 1] == null || flee[i - 1].isEmpty()) {
                     flee[i - 1] = goTo(new Node(gh.getPosition()), new Node(13, 18));
                 }
+                if(flee[i-1] != null && !flee[i-1].isEmpty()){
                 nextDir = flee[i - 1].get(0);
                 flee[i - 1].remove(0);
                 turn = canTurn(gh, nextDir.dir);
+                }
                 System.out.println("Ghost " + (i - 1) + " : goto base");
             } else if (gh.getState() == Ghost.State.HUNTED) {
                 flee[i - 1] = null;

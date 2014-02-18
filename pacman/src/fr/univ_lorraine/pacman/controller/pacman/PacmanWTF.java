@@ -1,12 +1,16 @@
 package fr.univ_lorraine.pacman.controller.pacman;
 
 import com.badlogic.gdx.math.Vector2;
+
 import fr.univ_lorraine.pacman.controller.PacmanController;
 import fr.univ_lorraine.pacman.model.Block;
 import fr.univ_lorraine.pacman.model.GameBasicElement;
 import fr.univ_lorraine.pacman.model.Ghost;
 import fr.univ_lorraine.pacman.model.Pacman;
+import fr.univ_lorraine.pacman.model.SuperPellet;
 import fr.univ_lorraine.pacman.model.World;
+import fr.univ_lorraine.pacman.model.GameMoveableBasicElement.State;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -16,6 +20,9 @@ public class PacmanWTF extends PacmanController {
     private int dir;
     private ArrayList<Direction> path;
     private static final double epsilon = 0.2;
+    private long chrono ; 
+    private long temps;
+    private boolean hunt;
 
     private class Direction {
 
@@ -109,6 +116,9 @@ public class PacmanWTF extends PacmanController {
         public void setY(int y) {
             this.y = y;
         }
+        public double manhattan(Node n) {
+            return Math.abs(n.x - x) + Math.abs(n.y - y);
+        }
         
         @Override
         public String toString(){
@@ -121,22 +131,88 @@ public class PacmanWTF extends PacmanController {
             Node other = (Node)o;
             return other.x == x && other.y == y;
         }
+        
+        public boolean isInArrayList(ArrayList<Node> al){
+        	for(int i=0;i<al.size();i++){
+        		if (al.get(i).x==this.x&&al.get(i).y==this.y) return true;
+        	}
+        	return false;
+        }
     }
     public PacmanWTF(World world) {
         super(world);
         System.out.println("PacmanWTFCreator");
         pac = world.getPacman();
         path = null;
+        chrono=temps=0;
+        hunt=false;
+        lastHunt=java.lang.System.currentTimeMillis();
         // TODO Auto-generated constructor stub
     }
-
+    double lastHunt;
+    public boolean stillSuperPellet(){
+    	if(world.getElement(25, 27)!=null)return true;
+    	if(world.getElement(1, 27)!=null)return true;
+    	if(world.getElement(25, 7)!=null)return true;
+    	if(world.getElement(1, 7)!=null)return true;
+    	return false;
+    }
+    
+    public boolean isSuperPellet(Node n){
+    	int x=n.x,y=n.y;
+    	if(x==25&&y==27&&world.getElement(25, 27)!=null)return true;
+    	if(x==1&&y==27&&world.getElement(1, 27)!=null)return true;
+    	if(x==25&&y==7&&world.getElement(25, 7)!=null)return true;
+    	if(x==1&&y==7&&world.getElement(1, 7)!=null)return true;
+    	return false;
+    }
+    
+    public int closeSuperPellet(){    	
+    	int dist=900;
+    	if(stillSuperPellet()){
+    		Node pacm = new Node ((int)pac.getPosition().x,(int)pac.getPosition().y);
+    		Node tmpN = new Node(25,17);
+    		if(isSuperPellet(tmpN)) dist= (int) pacm.manhattan(tmpN);
+    		tmpN=new Node(1,27);
+    		if(isSuperPellet(tmpN)&&dist>(int) pacm.manhattan(tmpN)) dist =(int) pacm.manhattan(tmpN);
+    		tmpN=new Node(1,7);
+    		if(isSuperPellet(tmpN)&&dist>(int) pacm.manhattan(tmpN)) dist =(int) pacm.manhattan(tmpN);
+    		tmpN=new Node(25,7);
+    		if(isSuperPellet(tmpN)&&dist>(int) pacm.manhattan(tmpN)) dist =(int) pacm.manhattan(tmpN);
+    	}
+    	return dist;
+    }
+    
     @Override
     public void update(float delta) {
+    	int distGhost = 3;
+    	int distSP=10;
+    	int time = 7000;
+    	if(hunt &&pac.getState()!=State.HUNTING){
+			this.hunt=false;
+			this.temps = java.lang.System.currentTimeMillis() - chrono ;
+			this.lastHunt=java.lang.System.currentTimeMillis();
+    	}
+    	if(pac.getState()==State.HUNTING&&!hunt){
+			this.hunt=true;			
+			this.chrono = java.lang.System.currentTimeMillis() ;				
+		}
+    	
+    	
         if (canTurn()) {
-            if (path == null || path.isEmpty()) {
-                path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y);
+        	if ((path == null || path.isEmpty())&&java.lang.System.currentTimeMillis()-lastHunt>time&&stillSuperPellet()&&closeSuperPellet()<distSP){
+        		path=findClosestSuperPellet((int) pac.getPosition().x, (int) pac.getPosition().y, distGhost);
+        		if(path!=null&&!path.isEmpty())System.out.println("PACMAN ====== Go To SuperPellet! ======");
+        	}
+        	if (path == null || path.isEmpty()) {
+                path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y, distGhost);
+        		if(path!=null&&!path.isEmpty())System.out.println("PACMAN ====== Go To Pellet with ghost avoid! ======");
             }/**/
-
+            if (path == null || path.isEmpty()) {
+            	path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y, 0);
+        		if(path!=null&&!path.isEmpty())System.out.println("PACMAN ====== Go To Pellet without ghost avoid! ======");
+            	pac.update(delta);return;
+            }
             if (path.get(0).x == (int) pac.getPosition().x && path.get(0).y == (int) pac.getPosition().y) {
                 dir = path.get(0).dir;
                 path.remove(0);
@@ -160,7 +236,8 @@ public class PacmanWTF extends PacmanController {
         pac.update(delta);
     }
 
-    private ArrayList<Direction> findClosestPellet(int x, int y) {
+    private ArrayList<Direction> findClosestPellet(int x, int y, int distGhost) {
+    	initGhostsNeighbors(distGhost);
         ArrayList<Node> visited = new ArrayList<>();
         ArrayList<Node> toVisit = new ArrayList<>();
         toVisit.add(new Node(x,y));
@@ -259,7 +336,132 @@ public class PacmanWTF extends PacmanController {
         }
         ArrayList<Direction> path = new ArrayList<>();
         Node node;
-        if(e != null && !(e instanceof Block)){
+        //if(e != null && !(e instanceof Block)){
+        if(!toVisit.isEmpty()){
+            node = toVisit.get(toVisit.size()-1);
+            System.out.println("Pacman : goto " + node);
+            while(node.getComeFrom() != null){
+                if(node.getX() - node.getComeFrom().getX() < 0){
+                    path.add(0, new Direction(node.getComeFrom().getX(),node.getComeFrom().getY(),Direction.LEFT));
+                }
+                else if(node.getX() - node.getComeFrom().getX() > 0){
+                    path.add(0, new Direction(node.getComeFrom().getX(),node.getComeFrom().getY(),Direction.RIGHT));
+                }
+                else if(node.getY() - node.getComeFrom().getY() < 0){
+                    path.add(0, new Direction(node.getComeFrom().getX(),node.getComeFrom().getY(),Direction.DOWN));
+                }
+                else{
+                    path.add(0, new Direction(node.getComeFrom().getX(),node.getComeFrom().getY(),Direction.TOP));
+                }
+                node = node.getComeFrom();
+            }
+        }
+        return path;
+    }
+    
+
+    private ArrayList<Direction> findClosestSuperPellet(int x, int y, int distGhost) {
+    	initGhostsNeighbors(distGhost);
+        ArrayList<Node> visited = new ArrayList<>();
+        ArrayList<Node> toVisit = new ArrayList<>();
+        toVisit.add(new Node(x,y));
+        GameBasicElement e = null;
+        while(!toVisit.isEmpty()){
+            x = toVisit.get(0).x;
+            y = toVisit.get(0).y;
+            e = world.getElement((x + 26)%27, y);
+            if((e == null || !(e instanceof Block)) && !isGhost((x + 26)%27, y)){
+                int i;
+                for(i = 0; i < visited.size(); i++){
+                    if(visited.get(i).equals(new Node((x + 26)%27, y))){
+                        break;
+                    }
+                }
+                if(i >= visited.size()){
+                    Node node = new Node((x + 26)%27, y);
+                    node.setComeFrom(toVisit.get(0));
+                    node.setDist(toVisit.get(0).dist + 1);
+                    toVisit.add(node);
+                    if(e instanceof SuperPellet)
+                        break;
+                }
+                else if(visited.get(i).dist > toVisit.get(0).dist + 1){
+                    visited.get(i).setComeFrom(toVisit.get(0));
+                    toVisit.add(visited.get(i));
+                    visited.remove(i);
+                }
+            }
+            e = world.getElement((x+1)%27, y);
+            if((e == null || !(e instanceof Block)) && !isGhost((x+1)%27, y)){
+                int i;
+                for(i = 0; i < visited.size(); i++){
+                    if(visited.get(i).equals(new Node((x+1)%27, y))){
+                        break;
+                    }
+                }
+                if(i >= visited.size()){
+                    Node node = new Node((x+1)%27, y);
+                    node.setComeFrom(toVisit.get(0));
+                    toVisit.add(node);
+                    if(e instanceof SuperPellet)
+                        break;
+                }
+                else if(visited.get(i).dist > toVisit.get(0).dist + 1){
+                    visited.get(i).setComeFrom(toVisit.get(0));
+                    toVisit.add(visited.get(i));
+                    visited.remove(i);
+                }
+            }
+            e = world.getElement(x, y-1);
+            if((e == null || !(e instanceof Block)) && !isGhost(x, y-1)){
+                int i;
+                for(i = 0; i < visited.size(); i++){
+                    if(visited.get(i).equals(new Node(x, y-1))){
+                        break;
+                    }
+                }
+                if(i >= visited.size()){
+                    Node node = new Node(x, y-1);
+                    node.setComeFrom(toVisit.get(0));
+                    toVisit.add(node);
+                    if(e instanceof SuperPellet)
+                        break;
+                }
+                else if(visited.get(i).dist > toVisit.get(0).dist + 1){
+                    visited.get(i).setComeFrom(toVisit.get(0));
+                    toVisit.add(visited.get(i));
+                    visited.remove(i);
+                }
+            }
+            e = world.getElement(x, y+1);
+            if((e == null || !(e instanceof Block)) && !isGhost(x, y+1)){
+                int i;
+                for(i = 0; i < visited.size(); i++){
+                    if(visited.get(i).equals(new Node(x, y+1))){
+                        break;
+                    }
+                }
+                if(i >= visited.size()){
+                    Node node = new Node(x, y+1);
+                    node.setComeFrom(toVisit.get(0));
+                    toVisit.add(node);
+                    if(e instanceof SuperPellet)
+                        break;
+                }
+                else if(visited.get(i).dist > toVisit.get(0).dist + 1){
+                    visited.get(i).setComeFrom(toVisit.get(0));
+                    toVisit.add(visited.get(i));
+                    visited.remove(i);
+                }
+
+            }
+            visited.add(toVisit.get(0));
+            toVisit.remove(0);
+        }
+        ArrayList<Direction> path = new ArrayList<>();
+        Node node;
+        //if(e != null && !(e instanceof Block)){
+        if(!toVisit.isEmpty()){
             node = toVisit.get(toVisit.size()-1);
             System.out.println("Pacman : goto " + node);
             while(node.getComeFrom() != null){
@@ -281,20 +483,81 @@ public class PacmanWTF extends PacmanController {
         return path;
     }
 
+
     private boolean canTurn() {
         return pac.getPosition().x - (int) pac.getPosition().x < epsilon && pac.getPosition().y - (int) pac.getPosition().y < epsilon;
     }
     
+    public ArrayList<Node> getNeighbors(Node n){
+    	int x=n.getX(); int y=n.getY();
+    	ArrayList<Node> neighbors = new ArrayList<>();
+    	GameBasicElement e = world.getElement((x + 26)%27, y);
+    	if(!(e instanceof Block)) neighbors.add(new Node((x + 26)%27, y));
+    	e = world.getElement((x+1)%27, y);
+    	if(!(e instanceof Block)) neighbors.add(new Node((x+1)%27, y));
+    	e = world.getElement(x, y-1);
+    	if(!(e instanceof Block)) neighbors.add(new Node(x, y-1));
+    	e = world.getElement(x, y+1);
+    	if(!(e instanceof Block)) neighbors.add(new Node(x, y+1));
+    	return neighbors;
+    }   
+
+    public ArrayList<Node> getMultipleNeighbors(Node n, int nb, ArrayList<Node> verif ){    	
+    	ArrayList<Node> multipleNeighbors = getNeighbors(n);
+    	for(Node nod : multipleNeighbors){
+    		if (!nod.isInArrayList(verif)){
+    			verif.add(nod);
+    			if(nb>0)verif.addAll(getMultipleNeighbors(nod, nb-1, verif));
+    		}
+    	}
+    	return verif;    	
+   }
+    
+    public ArrayList<Node> getMultipleNeighbors(Node n, int nb){
+    	ArrayList<Node> multipleNeighbors = getNeighbors(n);
+    	multipleNeighbors.add(n);
+    	for(Node nod : getNeighbors(n)){
+    		multipleNeighbors.add(nod);
+    		multipleNeighbors.addAll(getMultipleNeighbors(nod, nb-1, multipleNeighbors));
+    	}
+    	return multipleNeighbors;    	
+   }
+    
+    public Node ghostNode(Ghost gh){
+    	Node n= new Node((int)gh.getPosition().x,(int)gh.getPosition().y);
+    	return n;
+    }
+    
+    public ArrayList<Node> ghostNodes(){
+    	 Iterator<Ghost> it = world.ghostsIterator();
+    	 ArrayList<Node> ghosts=new ArrayList<>();
+    	 while(it.hasNext()){
+            ghosts.add(ghostNode(it.next()));
+    	 }
+    	 return ghosts;
+    }
+    
+    public  ArrayList<Node> ghostsNeighbors;
+    
+    public void initGhostsNeighbors(int i){
+    ghostsNeighbors = new ArrayList<Node>();
+     ArrayList<Node> gho=ghostNodes();
+     ArrayList<Node> ghostsN =  new ArrayList<Node>();
+     gho.addAll(ghostsN);
+     for(Node n : gho){
+      	   	 if (i>0) ghostsN.addAll(getMultipleNeighbors(n,i));
+     }
+     ghostsNeighbors=ghostsN;
+      
+  	}
+    
+    
+    
     private boolean isGhost(int x, int y){
-        Iterator<Ghost> it = world.ghostsIterator();
-        Vector2 gh;
-        if(pac.getState() == Pacman.State.HUNTING)
-            return false;
-        while(it.hasNext()){
-            gh = it.next().getPosition();
-            if(Math.abs(gh.x-x) <= 1 && Math.abs(gh.y-y) <= 1)
-                return true;
-        }
-        return false;
+    if(hunt&&temps>500) return false;
+     Node nod=new Node(x,y);
+   	 if(nod.isInArrayList(ghostsNeighbors))		 return true;
+   	 
+     return false;
     }
 }

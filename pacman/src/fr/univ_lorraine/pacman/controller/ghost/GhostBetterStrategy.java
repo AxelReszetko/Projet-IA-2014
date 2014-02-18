@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import fr.univ_lorraine.pacman.controller.GhostController;
 import fr.univ_lorraine.pacman.model.Block;
 import fr.univ_lorraine.pacman.model.GameBasicElement;
+import fr.univ_lorraine.pacman.model.GameMoveableBasicElement.State;
 import fr.univ_lorraine.pacman.model.Ghost;
 import fr.univ_lorraine.pacman.model.Pacman;
 import fr.univ_lorraine.pacman.model.World;
@@ -18,6 +19,7 @@ public class GhostBetterStrategy extends GhostController{
 
     private Vector2 pacLastPos;    
     private Pacman pac = world.getPacman();
+    private Node pacPos ;
 	private ArrayList<Stack<Direction>> ghPath = new ArrayList<>();
 	private ArrayList<Node> ghGoal = new ArrayList<>();
 	private static final double epsilon = 0.2;
@@ -143,6 +145,7 @@ public class GhostBetterStrategy extends GhostController{
     {
     	super(world);
     	pacLastPos=new Vector2();
+    	ghPath=new ArrayList<Stack<Direction>>();
     }
     
     public void setPath(Node position, Node goal)
@@ -155,29 +158,43 @@ public class GhostBetterStrategy extends GhostController{
 	public void update(float delta) {
 		// TODO Auto-generated method stub
 		Iterator<Ghost> iterGhost = world.ghostsIterator();
-		Node goal;
 		int rank = 0;
-		goal = new Node ((int)pac.getPosition().x,(int)pac.getPosition().y);
-		if(ghPath.size()==0)
+		pacPos = new Node ((int)pac.getPosition().x,(int)pac.getPosition().y);
+		ghGoal=new ArrayList<GhostBetterStrategy.Node>();
+		for(int i = 0; i< 4;++i)
 		{
-			for(int i = 0; i< 4;++i)
+			ghGoal.add(pacPos);
+		}
+
+		if(ghPath.size()==0)
+		{				
+			for(int i=0;i<4;++i)
 			{
-				if(i==2)
-				{
-					goal=getPinkyGoal();
-				}
-				ghPath.add(null);
-				ghGoal.add(goal);
+				ghPath.add(new Stack<Direction>());
 			}
 		}
+		
 		while(iterGhost.hasNext())
 		{
 			Ghost gh = iterGhost.next();
 			Node ghPosition = new Node((int)Math.round(gh.getPosition().x),(int)Math.round(gh.getPosition().y));
 			Stack<Direction> path = ghPath.get(rank);
+			
+		/*	if(rank==4)
+			{
+				ghGoal.set(rank, getPinkyGoal(ghPosition));
+			}
+			if(rank==3)
+			{
+				ghGoal.set(rank, getClydeGoal(ghPosition));
+			}*/
+			ghGoal.set(rank, getPhantomGoal(rank, ghPosition));
+			if(gh.getState()==State.DEAD || gh.getState()==State.HUNTED)
+				ghGoal.set(rank,new Node(13, 17));
+			
 			if (canTurn(gh))
 			{
-				path = astar(ghPosition, goal);
+				path = astar(ghPosition, ghGoal.get(rank));
 				ghPath.set(rank, path);
 			}
 			if(!path.isEmpty())
@@ -206,6 +223,12 @@ public class GhostBetterStrategy extends GhostController{
 	
 	private Stack<Direction> astar(Node start, Node to)
 	{
+		System.out.println(to.toString());
+		if(world.getElement(to.x, to.y) instanceof Block)
+		{
+			System.err.println("Error, the goal is a wall!");
+			System.exit(1);
+		}
 		Stack<Direction> path = new Stack<Direction>();
 		ArrayList<Node> close = new ArrayList<Node>();//pathes visited
 		ArrayList<Node> open = new ArrayList<Node>(); //pathes to visit
@@ -219,9 +242,9 @@ public class GhostBetterStrategy extends GhostController{
 			int localX = from.getX();
 			int localY = from.getY();
 			
-			if(!(world.getElement((localX +25)%26, localY) instanceof Block))//look left
+			if(!(world.getElement((localX +26)%27, localY) instanceof Block))//look left
 			{
-				Node n = new Node((localX + 25)%26, localY);
+				Node n = new Node((localX + 26)%27, localY);
 				if(!close.contains(n))
 				{
 					n.setComeFrom(from);
@@ -230,9 +253,9 @@ public class GhostBetterStrategy extends GhostController{
 					adjacent.add(n);
 				}
 			}
-			if(!(world.getElement((localX + 27)%26, localY) instanceof Block))//look right
+			if(!(world.getElement((localX + 1)%27, localY) instanceof Block))//look right
 			{
-				Node n = new Node(localX + 1, localY);
+				Node n = new Node((localX + 1)%27, localY);
 				if(!close.contains(n))
 				{
 					n.setComeFrom(from);
@@ -276,7 +299,12 @@ public class GhostBetterStrategy extends GhostController{
 				}				
 				
 				if(chosen == null || (open.get(i).dist + open.get(i).movePrice < chosen.dist + chosen.movePrice) )
-					chosen = open.get(i);	
+					chosen = open.get(i);
+			/*	else
+					if(open.get(i).dist + open.get(i).movePrice == chosen.dist + chosen.movePrice  && Math.random()>0.5)
+					{
+						chosen = open.get(i);
+					}*/
 			}
 			if(chosen == null) //this is not supposed to happen
 			{
@@ -339,38 +367,95 @@ public class GhostBetterStrategy extends GhostController{
 		return 0;
 	}
 	
-	private Node getPinkyGoal()
+	private Node getPinkyGoal(Node position)
 	{
+		int offset = 4;
 		if(getPacmanDir()==3)
 		{
-			if(!(world.getElement(ghGoal.get(1).x - 2, ghGoal.get(1).y) instanceof Block))
-				return new Node (ghGoal.get(1).x-2,ghGoal.get(1).y);
-			if(!(world.getElement(ghGoal.get(1).x - 1, ghGoal.get(1).y) instanceof Block))
-				return new Node (ghGoal.get(1).x-1,ghGoal.get(1).y);
+			for(int i=offset;i>=0;--i)
+			{
+				if((ghGoal.get(0).x -i)>0 && !(world.getElement((ghGoal.get(0).x +27 - i)%27, ghGoal.get(0).y) instanceof Block))
+					return new Node ((ghGoal.get(0).x +27 -i)%27,ghGoal.get(0).y);
+			}
 		}
 		if(getPacmanDir()==2)
 		{
-			if(!(world.getElement(ghGoal.get(1).x + 2, ghGoal.get(1).y) instanceof Block))
-				return new Node (ghGoal.get(1).x+2,ghGoal.get(1).y);
-			if(!(world.getElement(ghGoal.get(1).x + 1, ghGoal.get(1).y) instanceof Block))
-				return new Node (ghGoal.get(1).x+1,ghGoal.get(1).y);
+			for(int i=offset;i>=0;--i)
+			{
+				if((ghGoal.get(0).x +i)<world.getWidth() && !(world.getElement((ghGoal.get(0).x + i)%27, ghGoal.get(0).y) instanceof Block))
+					return new Node ((ghGoal.get(0).x + i)%27,ghGoal.get(0).y);
+			}
 		}
 		if(getPacmanDir()==1)
 		{
-			if(!(world.getElement(ghGoal.get(1).x, ghGoal.get(1).y-2) instanceof Block))
-				return new Node (ghGoal.get(1).x,ghGoal.get(1).y-2);
-			if(!(world.getElement(ghGoal.get(1).x, ghGoal.get(1).y-1) instanceof Block))
-				return new Node (ghGoal.get(1).x,ghGoal.get(1).y-1);
+			for(int i=offset;i>=0;--i)
+			{
+				if((ghGoal.get(0).y -i)>0 && !(world.getElement(ghGoal.get(0).x, ghGoal.get(0).y - i) instanceof Block))
+					return new Node (ghGoal.get(0).x,ghGoal.get(0).y - i);
+			}
 		}
 		if(getPacmanDir()==0)
 		{
-			if(!(world.getElement(ghGoal.get(1).x , ghGoal.get(2).y+2) instanceof Block))
-				return new Node (ghGoal.get(1).x,ghGoal.get(1).y+2);
-			if(!(world.getElement(ghGoal.get(1).x , ghGoal.get(1).y+1) instanceof Block))
-				return new Node (ghGoal.get(1).x,ghGoal.get(1).y+1);
+			for(int i=offset;i>=0;--i)
+			{
+				if((ghGoal.get(0).y +i)<world.getHeight() && !(world.getElement(ghGoal.get(0).x, ghGoal.get(0).y + i) instanceof Block))
+					return new Node (ghGoal.get(0).x,ghGoal.get(0).y + i);
+			}
 		}
-		return ghGoal.get(1);
+		
+		return ghGoal.get(0);
 	}
 	
+	private Node getClydeGoal(Node position)
+	{
+		if(manhattan(position, ghGoal.get(0))>4)
+			return ghGoal.get(0);
+		else
+			return new Node( 13,17);
+		
+	}
+
+	private Node getPhantomGoal(int phantom, Node position)
+	{
+		int offset = 4;
+		if(manhattan(position,pacPos)>offset)
+		{
+			if(phantom==3)
+			{
+				for(int i=offset;i>=0;--i)
+				{
+					if((pacPos.y +i)<world.getHeight() && !(world.getElement(pacPos.x, pacPos.y+i) instanceof Block))
+						return new Node (pacPos.x,pacPos.y+i);
+				}
+			}
+			if(phantom==2)
+			{
+				for(int i=offset;i>=0;--i)
+				{
+					if((pacPos.y -i)>0 && !(world.getElement(pacPos.x, pacPos.y - i) instanceof Block))
+						return new Node (pacPos.x,pacPos.y - i);
+				}
+			}
+			if(phantom==1)
+			{
+				for(int i=offset;i>=0;--i)
+				{
+					if((pacPos.x +i)<world.getWidth() && !(world.getElement((pacPos.x + i), pacPos.y) instanceof Block))
+						return new Node ((pacPos.x + 27 +i)%27,pacPos.y);
+				}
+			}
+			if(phantom==0)
+			{
+				for(int i=offset;i>=0;--i)
+				{
+					if((pacPos.x -i)>0 && !(world.getElement((pacPos.x +27 - i)%27, pacPos.y) instanceof Block))
+						return new Node ((pacPos.x +27 -i)%27,pacPos.y);
+				}
+			}
+		}
+
+		return ghGoal.get(0);
+	}
+
 
 }

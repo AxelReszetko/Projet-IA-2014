@@ -221,7 +221,8 @@ public class PacmanWTF extends PacmanController {
             	dirPac=1;
                 pac.turnDown();
                 break;
-        }
+                }
+    		path=null;
     	}
     	
     	

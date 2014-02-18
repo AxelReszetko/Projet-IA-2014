@@ -182,12 +182,13 @@ public class PacmanWTF extends PacmanController {
     	}
     	return dist;
     }
-    
+    int dirPac;
     @Override
     public void update(float delta) {
     	int distGhost = 3;
     	int distSP=10;
     	int time = 7000;
+    	if(hunt&&pac.getState()==State.HUNTING) this.temps = java.lang.System.currentTimeMillis() - chrono ;
     	if(hunt &&pac.getState()!=State.HUNTING){
 			this.hunt=false;
 			this.temps = java.lang.System.currentTimeMillis() - chrono ;
@@ -197,6 +198,27 @@ public class PacmanWTF extends PacmanController {
 			this.hunt=true;			
 			this.chrono = java.lang.System.currentTimeMillis() ;				
 		}
+    	if(detectGhost(2)){
+    		System.out.println("PACMAN ====== Go To Backward! ======");
+    		switch (dirPac) {
+            case Direction.DOWN:
+            	dirPac=0;
+                pac.turnUp();
+                break;
+            case Direction.LEFT:
+            	dirPac=2;
+                pac.turnRight();
+                break;
+            case Direction.RIGHT:
+            	dirPac=3;
+                pac.turnLeft();
+                break;
+            case Direction.TOP:
+            	dirPac=1;
+                pac.turnDown();
+                break;
+        }
+    	}
     	
     	
         if (canTurn()) {
@@ -211,22 +233,26 @@ public class PacmanWTF extends PacmanController {
             if (path == null || path.isEmpty()) {
             	path = findClosestPellet((int) pac.getPosition().x, (int) pac.getPosition().y, 0);
         		if(path!=null&&!path.isEmpty())System.out.println("PACMAN ====== Go To Pellet without ghost avoid! ======");
-            	pac.update(delta);return;
+        		else {pac.update(delta);return;}
             }
             if (path.get(0).x == (int) pac.getPosition().x && path.get(0).y == (int) pac.getPosition().y) {
                 dir = path.get(0).dir;
                 path.remove(0);
                 switch (dir) {
                     case Direction.DOWN:
+                    	dirPac=1;
                         pac.turnDown();
                         break;
                     case Direction.LEFT:
+                    	dirPac=3;
                         pac.turnLeft();
                         break;
                     case Direction.RIGHT:
+                    	dirPac=2;
                         pac.turnRight();
                         break;
                     case Direction.TOP:
+                    	dirPac=0;
                         pac.turnUp();
                         break;
                 }
@@ -236,6 +262,44 @@ public class PacmanWTF extends PacmanController {
         pac.update(delta);
     }
 
+    public boolean detectGhost(int i){
+    	Node pacm = new Node ((int)pac.getPosition().x,(int)pac.getPosition().y);
+    	Node fant;
+    	int x,y;
+    	switch (dirPac){
+        	case Direction.DOWN:
+        		y=1;
+        		for(int j=0;j<i;j++){
+        			fant=new Node(pacm.x,pacm.y-y);
+        			if(isGhost(fant)) return true;
+        		}
+        		break;
+        	case Direction.LEFT:
+        		x=1;
+    			for(int j=0;j<i;j++){
+    				fant=new Node(pacm.x-x,pacm.y);
+    				if(isGhost(fant)) return true;
+    			}
+        		break;
+        	case Direction.RIGHT:
+	    		x=1;
+				for(int j=0;j<i;j++){
+					fant=new Node(pacm.x+x,pacm.y);
+					if(isGhost(fant)) return true;
+				}
+        		break;
+        	case Direction.TOP:
+        		y=1;
+        		for(int j=0;j<i;j++){
+        			fant=new Node(pacm.x,pacm.y+y);
+        			if(isGhost(fant)) return true;
+        		}
+        		break;
+    	}
+    	return false;
+    }
+    
+    
     private ArrayList<Direction> findClosestPellet(int x, int y, int distGhost) {
     	initGhostsNeighbors(distGhost);
         ArrayList<Node> visited = new ArrayList<>();
@@ -551,10 +615,15 @@ public class PacmanWTF extends PacmanController {
       
   	}
     
+    private boolean isGhost(Node n){
+        if(hunt&&temps>200) return false;
+        else if(n.isInArrayList(ghostNodes())) return true;      	 
+        return false;
+     }
     
     
     private boolean isGhost(int x, int y){
-    if(hunt&&temps>500) return false;
+    if(hunt&&temps>600) return false;
      Node nod=new Node(x,y);
    	 if(nod.isInArrayList(ghostsNeighbors))		 return true;
    	 

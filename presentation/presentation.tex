@@ -1,0 +1,171 @@
+\documentclass[c]{beamer}
+
+%\usepackage[frenchb]{babel}
+%\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%\usepackage{graphicx}
+
+\title[Projet d'Intelliigence Artificielle]{Implémentatation des Intelligences Artificielles dans le jeu Pacman }
+\author{Fabien NOLLET \and Pierre P\'EZOT \and Axel RESZETKO}
+\date{19 février 2014}
+\institute{TELECOM Nancy}
+\titlegraphic{\includegraphics[width=2.5cm]{telecom_nancy.png}}
+
+
+\usetheme{Warsaw}
+%\usecolortheme{spruce}
+
+\addtobeamertemplate{footline}{\insertframenumber/\inserttotalframenumber}
+
+\begin{document}
+
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+  \begin{frame}
+  \tableofcontents
+\end{frame}
+
+\section{GhostCloaker}
+\begin{frame}
+    \frametitle{Principe}
+    \begin{block}{Fonctionnalités}
+        \begin{itemize}
+            \item Trouver l'intersection la plus proche de Pacman atteignable en avance,
+            \item Foncer sur Pacman si il est proche,
+            \item Se maintenir à distance de Pacman lorsqu'il chasse les fantômes,
+            \item Rentrer à la base quand ils sont morts.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Algorithmes}
+	\begin{block}{Algorithmes}
+	\begin{itemize}
+        \item Parcours en largeur avec liste d'ouverts et de fermés pour la recherche de chemin,
+        \item A chaque n\oe ud est associé une distance à Pacman et aux fantômes,
+        \item Sélectionner et répartir les intersections les plus proches de Pacman,
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Points forts et points faibles}
+    \begin{block}{Points forts}
+        \begin{itemize}
+            \item Stratégie d'encerclement,
+            \item Utilisation du tunnel,
+            \item Fuite efficace.
+        \end{itemize}
+    \end{block}
+    \begin{block}{Points faibles}
+        \begin{itemize}
+            \item Peut avoir un comportement inattendu,
+            \item Répartition des intersections non optimale.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\section{GhostBetter}
+\begin{frame}
+    \frametitle{Principe}
+    \begin{block}{Fonctionnalités}
+        \begin{itemize}
+            \item Se répartir autour de Pacman
+            \item Foncer sur Pacman si il est proche,
+            \item Rentrer à la base quand ils sont chassés
+            \item Rentrer à la base quand ils sont morts.
+        \end{itemize}
+    \end{block}
+%\end{frame}
+
+%\begin{frame}
+%	\frametitle{Algorithmes}
+	\begin{block}{Algorithmes}
+	\begin{itemize}
+        \item A chaque n\oe ud est associé une distance de Manhattan à Pacman,
+        \item Algorithme A* pour la recherche de chemin, dont l'heuristique est la distance de Manhattan au Pacman.
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Points forts et points faibles}
+    \begin{block}{Points forts}
+        \begin{itemize}
+            \item Recherche de chemin efficace et légère,
+            \item Stratégie d'encerclement,
+            \item Positionnemennt à des emplacements stratégiques,
+            \item Repli en cas de danger.
+        \end{itemize}
+    \end{block}
+    \begin{block}{Points faibles}
+        \begin{itemize}
+            \item Non utilisation du tunnel,
+            \item Repli non optimisé.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\section{PacmanWTF}
+\begin{frame}
+    \frametitle{Principe}
+    \begin{block}{Fonctionnalités}
+        \begin{itemize}
+            \item Chercher les Pellet et éviter les fantômes (zone de sécurité autour),
+            \item Quand ce n'est pas possible, le faire sans la zone de sécurité,
+            \item Chercher une SuperPellet si il y en a une proche et si Pacman ne chasse pas,
+            \item Faire demi tour si un fantôme est juste devant.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Algorithmes}
+	\begin{block}{Algorithmes}
+	\begin{itemize}
+        \item Parcours en largeur avec liste d'ouverts et de fermés pour la recherche de chemin,
+        \item S'arrête à la première Pellet trouvée,
+        \item Les fantômes et leur zone de sécurité sont considérés comme des blocs lorsqu'ils chassent.
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Points forts et points faibles}
+    \begin{block}{Points forts}
+        \begin{itemize}
+            \item Évite les fantômes lors de la recherche de Pellet et SuperPellet,
+            \item Se protège en allant régulièrement prendre des SuperPellet,
+            \item Se protège en faisant un demi-tour d'urgence si un fantôme est trop proche.
+        \end{itemize}
+    \end{block}
+    \begin{block}{Points faibles}
+        \begin{itemize}
+            \item N'évite pas les encerclements,
+            \item Parcours chaotique : oublie des Pellets,
+            \item Ne chasse pas les fantômes.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+
+
+
+\section{Conclusion}
+\begin{frame}
+  \begin{block}{Conclusion}
+      \begin{itemize}
+          \item Mise en application concrète des algorithmes vus en cours,
+          \item Reflexion sur les stratégies de jeu les plus efficaces,
+          \item Quelques difficultés à appliquer la recherche de chemin sur le jeu donné.
+      \end{itemize}
+  \end{block}
+  \begin{figure}
+      \includegraphics[width=10cm]{pacman}
+  \end{figure}
+\end{frame}
+\end{document}

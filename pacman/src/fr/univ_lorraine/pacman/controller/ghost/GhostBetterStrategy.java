@@ -417,7 +417,7 @@ public class GhostBetterStrategy extends GhostController{
 
 	private Node getPhantomGoal(int phantom, Node position)
 	{
-		int offset = 4;
+		int offset = 6;
 		if(manhattan(position,pacPos)>offset)
 		{
 			if(phantom==3)
